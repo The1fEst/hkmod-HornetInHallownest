@@ -84,6 +84,7 @@ public sealed class HornetSpawner : ModuleBase {
         if (HornetRoot) {
             // Like Silksongs QuitToMenu. Kills cogflies, for example.
             Silksong::ObjectPool.RecycleAll();
+            HudRefresh.ForgetSilkChunks();
 
             // ReturnToMainMenu autosaves, but we force the Knight active below (camera handback), which would otherwise
             // record Knight and clobber the "was playing Hornet" state. Capture the real hero first.
