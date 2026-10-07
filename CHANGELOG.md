@@ -17,6 +17,7 @@
 - Fix Hornet clinging to and climbing walls the Knight can't, such as dreamer and Godhome blockers
 - Fix Knight effects frozen mid-animation, such as Monarch Wings, staying visible while playing as Hornet
 - Fix Plasmium Phial and lifeblood cocoons not granting Hornet blue health after a death or hero switch
+- Fix invisible contact damage from boss detection zones, such as Paintmaster Sheo's and Failed Champion's
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings
