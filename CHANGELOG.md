@@ -35,6 +35,7 @@
   after her HUD was hidden
 - Fix the Beast Crest's rage not tinting the screen edges red
 - Fix the camera never shaking from Hornet's binds, attacks and other Silksong effects
+- Fix Hornet's tool icons piling up in one slot after switching to a crest with more tools equipped
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings
