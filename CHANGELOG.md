@@ -5,6 +5,7 @@
 - Fix softlock when picking up the Crystal Heart as Hornet
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
+- Fix Magnetite Dice block sound ignoring the volume settings
 
 ## v0.3.0
 
