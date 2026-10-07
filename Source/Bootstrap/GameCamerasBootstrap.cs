@@ -1,4 +1,5 @@
 extern alias Silksong;
+extern alias SilksongPM;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -25,12 +26,13 @@ internal static class GameCamerasBootstrap {
     // Fixes the per-frame "Invalid layer id" flood: some Silksong HUD MeshSortingOrder layerIDs ("Inventory"/"Scene
     // Border") have different uniqueIDs than HK's, so HK rejects them and OnUpdate re-applies every frame. Remap the
     // invalid ones to HK's by-name equivalent ("HUD" fallback).
-    private static readonly Dictionary<int, string> SsSortingLayerNames = new() {
+    private static readonly Dictionary<int, string> ssSortingLayerNames = new() {
         { 59515797, "Inventory" }, { 1017658613, "Scene Border" }
     };
 
     private const float HudScale = 0.75f; // roughly HK footprint
     private static Transform? hudOffsetTransform;
+    private static SilksongPM::PlayMakerFSM? hudSlideFsm;
     private static Vector3 hudOffsetPos;
     private static Vector3 hkHudScale = Vector3.one; // HK hudCanvas' real scale, cached so we can restore after hiding
     private static HashSet<PlayMakerFSM>? disabledHudFsms; // HK HUD FSMs we disabled when Knight is inert
@@ -46,7 +48,7 @@ internal static class GameCamerasBootstrap {
     internal static GameObject? HudCameraGo =>
         rig != null ? FindByName(rig.transform, "HudCamera")?.gameObject : null;
 
-    internal static bool HornetHudReady => inGame != null;
+    private static bool HornetHudReady => inGame != null;
 
     // Fires when Hornet's in-game HUD transitions to visible. Consumers re-trigger HUD elements that reset while their
     // GameObject is deactivated (a hero switch deactivates the whole In-game GO).
@@ -60,6 +62,8 @@ internal static class GameCamerasBootstrap {
         return null;
     }
 
+    // Ensure and BringUpHud return their status to the dev server routes on the debug branch.
+    // ReSharper disable once UnusedMethodReturnValue.Global
     internal static object Ensure() {
         try {
             rig ??= FindExistingRig();
@@ -156,7 +160,7 @@ internal static class GameCamerasBootstrap {
         foreach (var mso in root.GetComponentsInChildren<Silksong::MeshSortingOrder>(true)) {
             var id = (int)(layerIdF.GetValue(mso) ?? 0);
             if (SortingLayer.IsValid(id)) continue;
-            var hkId = SortingLayer.NameToID(SsSortingLayerNames.TryGetValue(id, out var nm) ? nm : "HUD");
+            var hkId = SortingLayer.NameToID(ssSortingLayerNames.GetValueOrDefault(id, "HUD"));
             layerIdF.SetValue(mso, hkId);
             var rend = mso.GetComponent<MeshRenderer>();
             if (rend != null) rend.sortingLayerID = hkId;
@@ -178,6 +182,7 @@ internal static class GameCamerasBootstrap {
 
     // Slide Silksong's HUD in (the rig is already active from Ensure): activate the HUD containers, fix sorting layers,
     // re-point SilkSpool, call HUDIn. The rig's HudCamera stays disabled — HK's HudCamera renders the UI-layer meshes.
+    // ReSharper disable once UnusedMethodReturnValue.Global
     internal static object BringUpHud(bool on) {
         rig ??= FindExistingRig();
         if (rig == null) return new { error = "rig not up (spawn first)" };
@@ -248,9 +253,11 @@ internal static class GameCamerasBootstrap {
         if (FindByName(hudCam, "Hud Canvas Offset") is { } hudOffset
             && FindByName(hudOffset, "Hud Canvas") is { } hudCanvas) {
             hudOffsetTransform = hudOffset;
+            hudSlideFsm = SilksongPM::PlayMakerFSM.FindFsmOnGameObject(hudCanvas.gameObject, "Slide Out");
             hudOffsetPos = hudCanvas.localPosition * (1f - HudScale);
             ApplyHudScale();
         }
+
         var layerFixes = RemapSortingLayers(hudCam);
 
         // Cross-game tag-index collision: some Silksong HUD GOs carry a tag index that resolves to HK's "Boss" tag, so
@@ -262,7 +269,8 @@ internal static class GameCamerasBootstrap {
                 untagged++;
             }
 
-        if (untagged > 0) Log.Debug($"[HUD] cleared bogus 'Boss' tag off {untagged} HUD object(s) (tag-index collision)");
+        if (untagged > 0)
+            Log.Debug($"[HUD] cleared bogus 'Boss' tag off {untagged} HUD object(s) (tag-index collision)");
 
         // The bootstrap's bare SilkSpool (added for AddUsingSilk) hijacked SilkSpool.Instance, so the HUD's real spool
         // (with the visual refs) Awoke early-return and never drew. Re-point Instance to it + DrawSpool now.
@@ -310,6 +318,10 @@ internal static class GameCamerasBootstrap {
             ApplyHudScale(); // HudGlobalHide.OnEnable just reset Hud Canvas Offset; re-assert the shrink
             HornetHudShown?.Invoke();
         }
+    }
+
+    internal static void SendHornetHudSlideEvent(string eventName) {
+        if (hudSlideFsm) hudSlideFsm.SendEvent(eventName);
     }
 
     // Re-point everything HK owns at the active hero. HK re-grabs all of this to its Knight on scene entry (CameraTarget
@@ -361,7 +373,7 @@ internal static class GameCamerasBootstrap {
     // reparent the rig camera under HK's camera: HK rebuilds its camera on scene/save-load and Unity destroys children
     // with the parent, so the reparented rig camera dies -> GameCameras.mainCamera dangles null -> the audio derefs NPE.
     // Instead a follower tracks HK's camera each frame while the camera stays in its own DDOL rig.
-    internal static void SyncMainCameraToHk() {
+    private static void SyncMainCameraToHk() {
         try {
             if (ssMainCamT == null) {
                 var ssGc = Silksong::GameCameras.SilentInstance;
@@ -435,6 +447,7 @@ internal static class GameCamerasBootstrap {
 
     internal static void Cleanup() {
         inGame = null;
+        hudSlideFsm = null;
         // DestroyImmediate (synchronous) so the rig is gone before a hot-reload's Initialize runs Ensure again (a
         // deferred Destroy would let FindExistingRig reuse a doomed object).
         rig ??= FindExistingRig();
