@@ -60,7 +60,8 @@ public sealed class InputModule : ModuleBase {
     // Buttons still held when a menu closes stay released for Hornet until let go: the press that closes a menu (B
     // cancels it) would otherwise land as gameplay input the same frame, e.g. her tap-to-bind.
     private readonly bool[] heldOverMenu = new bool[overridable.Length];
-    private bool wasInMenu;
+    private bool wasInInventory;
+    private int lastUpdateFrame;
     private ulong tick;
 
     public override string Id => "input";
@@ -206,10 +207,12 @@ public sealed class InputModule : ModuleBase {
             inputActions.MenuSuper.CommitWithState(menuButtons.Slots[1].IsPressed, tick, dt);
         }
 
-        var hkGm = GameManager.instance;
-        var inMenu = (hkGm && hkGm.isPaused) || hkInventoryOpen || Silksong::PlayerData.instance.isInventoryOpen;
-        var leftMenu = wasInMenu && !inMenu;
-        wasInMenu = inMenu;
+        // HornetRuntime skips this update under HK's pause menu and HK's inventory, so a skipped frame means one of them
+        // just closed. Hornet's own inventory keeps it running.
+        var inInventory = Silksong::PlayerData.instance.isInventoryOpen;
+        var leftMenu = lastUpdateFrame != Time.frameCount - 1 || (wasInInventory && !inInventory);
+        lastUpdateFrame = Time.frameCount;
+        wasInInventory = inInventory;
 
         for (var i = 0; i < overridable.Length; i++) {
             var def = overridable[i];
@@ -233,12 +236,6 @@ public sealed class InputModule : ModuleBase {
 
         if (!Paused) MaintainInputHandler();
         SyncActiveController();
-
-        // Silksong's listeners (e.g. ListenForCast, the bind) ignore input while its GameManager is paused, but the
-        // stand-in never pauses on its own, so mirror HK's pause menu. Hornet's inventory pauses HK too
-        // (InventoryModule) but must keep Silksong's own menu listeners running.
-        var ssGm = Silksong::GameManager.instance;
-        if (ssGm && hkGm) ssGm.isPaused = hkGm.isPaused && !Silksong::PlayerData.instance.isInventoryOpen;
     }
 
     // The necessary parts from InputHandler.Update.
