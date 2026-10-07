@@ -10,6 +10,7 @@
 - Fix Magnetite Dice block sound ignoring the volume settings
 - Fix Trial of the Fool respawn platform not appearing after a spike hit as Hornet
 - Allow opening the quick map as Hornet outside of benches
+- Allow opening the inventory map as Hornet by double-tapping quick map, like the Knight
 
 ## v0.3.0
 

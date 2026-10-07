@@ -15,11 +15,21 @@ public sealed class InventoryModule : ModuleBase {
 
     public override string Id => "inventory";
 
+    // HK's own inventory, which Hornet reaches through its map shortcut (double-tapping quick map).
+    internal static bool HkInventoryOpen { get; private set; }
+
     public override void Initialize() {
         Detour(typeof(Silksong::GameManager), "SetIsInventoryOpen", OnSetInventoryOpen);
+        Detour(typeof(GameManager), "SetIsInventoryOpen", OnSetHkInventoryOpen);
+    }
+
+    private static void OnSetHkInventoryOpen(Action<GameManager, bool> orig, GameManager self, bool value) {
+        HkInventoryOpen = value;
+        orig(self, value);
     }
 
     protected override void OnDeinitialize() {
+        HkInventoryOpen = false;
         // A hot-reload with the inventory open leaves the world frozen, HK's main camera off (DisplayFrozenCamera.Freeze)
         // and isInventoryOpen stuck (-> IsPaused -> CanInput false -> hero stuck).
         if (Time.timeScale == 0f) Time.timeScale = prevTimeScale;
@@ -27,7 +37,8 @@ public sealed class InventoryModule : ModuleBase {
         Silksong::PlayerData.instance.isInventoryOpen = false;
 
         var gameCameras = GameCameras.instance; // HK
-        if (gameCameras && gameCameras.mainCamera && !gameCameras.mainCamera.enabled) gameCameras.mainCamera.enabled = true;
+        if (gameCameras && gameCameras.mainCamera && !gameCameras.mainCamera.enabled)
+            gameCameras.mainCamera.enabled = true;
 
         // prevent knight being softlocked after hot reload in hornet inventory
         var hkGm = GameManager.instance;
@@ -49,7 +60,8 @@ public sealed class InventoryModule : ModuleBase {
                 // Never remember a frozen scale as "previous", or closing would leave the world stuck.
                 prevTimeScale = Time.timeScale > 0f ? Time.timeScale : 1f;
                 Time.timeScale = 0f;
-            } else {
+            }
+            else {
                 Time.timeScale = prevTimeScale;
             }
 
