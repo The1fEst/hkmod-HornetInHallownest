@@ -15,6 +15,7 @@
 - Show the map pane icon in Hornet's inventory once the Knight has a map
 - Fix the controller's X/Y menu buttons (e.g. changing crest) doing nothing in Hornet's inventory
 - Fix button prompts in Hornet's UI showing "None" or nothing instead of the bound key/button
+- Fix the button that closes the pause menu also triggering Hornet's bind
 
 ## v0.3.0
 
