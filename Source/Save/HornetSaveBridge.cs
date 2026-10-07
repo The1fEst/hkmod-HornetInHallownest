@@ -65,6 +65,13 @@ public sealed class HornetSaveBridge : ModuleBase {
         if (pendingPlayerData != null)
             try {
                 JsonConvert.PopulateObject(pendingPlayerData, spd, SaveSettings);
+                // HK PD owns the synced progression; the snapshot's copy can be stale. Masks picked up as Hornet before
+                // upgrades reached HK PD exist only in the snapshot, so carry them over before re-syncing.
+                var hk = PlayerData.instance;
+                if (spd.maxHealthBase > hk.maxHealthBase) hk.AddToMaxHealth(spd.maxHealthBase - hk.maxHealthBase);
+                PlayerDataSyncModule.SyncHKToSS();
+                HudRefresh.ResetHealthHud();
+                HudRefresh.RefreshMaxSilkHud();
                 // The restore bypasses SetEquippedTools, so refresh them manually.
                 ToolItemManagerBootstrap.RefreshBoundAttackTools();
             } catch (Exception e) {
@@ -74,7 +81,7 @@ public sealed class HornetSaveBridge : ModuleBase {
             }
 
         if (pendingHornetActive == null) return;
-        
+
         var want = pendingHornetActive.Value ? ActiveHero.Hornet : ActiveHero.Knight;
         if (HeroSwitch.Active != want) HeroSwitch.SetActive(want);
         pendingHornetActive = null;
