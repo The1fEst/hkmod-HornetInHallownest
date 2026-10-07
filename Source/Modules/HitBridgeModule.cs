@@ -56,27 +56,25 @@ public sealed class HitBridgeModule : ModuleBase {
         orig(store, target, depth, blackList);
         if (!target) return;
 
+        var alreadyBridged = false;
         foreach (var r in store) {
             if (r is HkEnemyHitBridge b) {
-                if (b.gameObject == target) {
-                    // already added
-                    return;
-                } else {
-                    // on e.g. False Knight, body and head both have HealthManagers and get added.
-                    // continue creating bridge healthmanager for the head
-                    continue;
-                }
+                // on e.g. False Knight, body and head both have HealthManagers and get added.
+                // continue creating bridge healthmanager for the head
+                if (b.gameObject == target) alreadyBridged = true;
+                continue;
             }
 
             if (r is SHealthManager) return;
         }
 
+        // HK's DamageEnemies sends TAKE DAMAGE to every target it hits, responder or not. Geo rocks break on it, and some
+        // enemies only wake on it (sleeping Gruz Mother).
+        FSMUtility.SendEventToGameObject(target, "TAKE DAMAGE");
+        if (alreadyBridged) return;
+
         var resp = target.GetComponentInParent<IHitResponder>();
-        if (resp as Component is not { } respComp) {
-            // No IHitResponder (e.g. Geo Rock): HK's DamageEnemies sends TAKE DAMAGE always
-            FSMUtility.SendEventToGameObject(target, "TAKE DAMAGE");
-            return;
-        }
+        if (resp as Component is not { } respComp) return;
 
         var respGo = respComp.gameObject;
         if (!respGo.TryGetComponent<HkEnemyHitBridge>(out var bridge)) {
@@ -91,7 +89,7 @@ public sealed class HitBridgeModule : ModuleBase {
     private static SIHit.HitResponse OnHealthManagerHit(Func<SHealthManager, SHitInstance, SIHit.HitResponse> orig,
         SHealthManager self, SHitInstance si) {
         if (self is HkEnemyHitBridge b) return b.ForwardHit(si);
-        
+
         return orig(self, si);
     }
 
@@ -121,14 +119,14 @@ public sealed class HitBridgeModule : ModuleBase {
 internal sealed class HkEnemyHitBridge : SHealthManager {
     internal IHitResponder Responder = null!;
     private NonBouncer? nonBouncer;
-    
+
 #pragma warning disable UNT0039
-    private new void Awake() => nonBouncer = GetComponent<NonBouncer>();                                                                                                                                            
+    private new void Awake() => nonBouncer = GetComponent<NonBouncer>();
 #pragma warning restore UNT0039
 
     internal SIHit.HitResponse ForwardHit(SHitInstance si) {
-        var isUnhandledAttackType = (int) si.AttackType > (int) AttackTypes.NailBeam;
-        var attackType = isUnhandledAttackType ? AttackTypes.Generic : (AttackTypes) si.AttackType;
+        var isUnhandledAttackType = (int)si.AttackType > (int)AttackTypes.NailBeam;
+        var attackType = isUnhandledAttackType ? AttackTypes.Generic : (AttackTypes)si.AttackType;
         // Allow e.g. silkspear to pierce enemies with a shield
         if ((si.SpecialType & SSpecialTypes.Piercer) != 0) attackType = AttackTypes.Spell;
 
@@ -144,7 +142,7 @@ internal sealed class HkEnemyHitBridge : SHealthManager {
             IgnoreInvulnerable = true, // prevent iframes
         };
         Responder.Hit(hkHit);
-        
+
         if (si.Source && !(nonBouncer && nonBouncer.active)) {
             Silksong::FSMUtility.SendEventToGameObject(si.Source, "HIT LANDED");
             // necessary for reaper's bounce
