@@ -57,6 +57,9 @@ public sealed class SceneFixesModule : ModuleBase {
             case "Ruins1_27":
                 FixHornetFountainLandGate();
                 break;
+            case "Abyss_12":
+                FixScreamGetFallGate();
+                break;
         }
     }
 
@@ -104,6 +107,28 @@ public sealed class SceneFixesModule : ModuleBase {
     #region Abyss shriek (Scream 2)
 
     private PlayMakerFSM? screamGet;
+    private bool holdingForScreamGet;
+    private static readonly string[] screamGetFallStates = ["Fall", "Land", "Ui Msg", "Get Up"];
+
+    public override void HornetActiveUpdate(Silksong::HeroController hero) => HoldThroughScreamGet(hero);
+
+    // The Knight's Spell Control keeps him without input or animation control until the cutscene reaches "End". Hornet's
+    // animation control would replace the "Get Up" clip the cutscene waits on, so it never ends.
+    // He also hangs without gravity where "Get" places him until "Fall". If she's already grounded on entering "Fall", its
+    // landing check fires before the actions that show her again and drop the Knight-skinned stand-in parented to her.
+    private void HoldThroughScreamGet(Silksong::HeroController hero) {
+        if (!holdingForScreamGet) return;
+        if (!screamGet || screamGet.ActiveStateName == "End") {
+            holdingForScreamGet = false;
+            hero.RegainControl();
+            hero.StartAnimationControl();
+            return;
+        }
+
+        if (!hero.controlReqlinquished || hero.acceptingInput) hero.RelinquishControl();
+        if (hero.AnimCtrl.controlEnabled) hero.StopAnimationControl();
+        hero.AffectedByGravity(Array.IndexOf(screamGetFallStates, screamGet.ActiveStateName) >= 0);
+    }
 
     private static PlayMakerFSM? FindScreamGetFsm() {
         var go = GameObject.Find("Scream 2 Get");
@@ -118,6 +143,7 @@ public sealed class SceneFixesModule : ModuleBase {
                 PlayerData.instance.screamLevel < 2) {
                 LogInfo("Thread Storm cast in Abyss shriek zone -> broadcasting SCREAM GET");
                 PlayMakerFSM.BroadcastEvent("SCREAM GET");
+                holdingForScreamGet = true;
             }
         } catch (Exception e) {
             LogError($"shriek cutscene: {e.Message}");
@@ -217,13 +243,19 @@ public sealed class SceneFixesModule : ModuleBase {
     private void FixSuperDashGetFallGate() =>
         RaiseHeroLandGate(GameObject.Find("Super Dash Get/Inspect Region"), "Inspect", "Knight Ground Y");
 
-    // City of Tears fountain Hornet cutscene: Take Control gates `Hero Y < 5.51` (LAND) with the target as a literal on
-    // the FloatCompare instead of an FSM variable.
-    private void FixHornetFountainLandGate() {
+    // City of Tears fountain Hornet cutscene: Take Control gates `Hero Y < 5.51` (LAND).
+    private void FixHornetFountainLandGate() =>
+        RaiseLiteralLandGate(GameObject.Find("Hornet Fountain Encounter"), "Control", "Take Control");
+
+    // Abyss shriek cutscene: Fall gates `Hero Y < 10.5` (LAND).
+    private void FixScreamGetFallGate() =>
+        RaiseLiteralLandGate(screamGet ? screamGet.gameObject : null, "Scream Get", "Fall");
+
+    // Like RaiseHeroLandGate, for gates that take the target as a literal on the FloatCompare instead of an FSM variable.
+    private void RaiseLiteralLandGate(GameObject? go, string fsmName, string stateName) {
         try {
-            var go = GameObject.Find("Hornet Fountain Encounter");
-            var fsm = go ? go.GetComponents<PlayMakerFSM>().FirstOrDefault(f => f.FsmName == "Control") : null;
-            var state = fsm ? fsm.FsmStates.FirstOrDefault(s => s.Name == "Take Control") : null;
+            var fsm = go ? go.GetComponents<PlayMakerFSM>().FirstOrDefault(f => f.FsmName == fsmName) : null;
+            var state = fsm ? fsm.FsmStates.FirstOrDefault(s => s.Name == stateName) : null;
             if (state == null) return;
 
             var delta = FeetDelta();

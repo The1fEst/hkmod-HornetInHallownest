@@ -26,6 +26,7 @@
 - Hornet now dies with her death animation, leaves her geo in a cocoon where she fell and breaks her silk spool until it's
   recovered, except in dreams, the White Palace and Godhome
 - Fix Hornet's silk spool showing an empty first cell after quitting to the menu and loading again
+- Fix Hornet moving freely during the Abyss Shriek cutscene, and the cutscene leaving her in the Knight's appearance
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings
