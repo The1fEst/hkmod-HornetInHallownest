@@ -175,6 +175,7 @@ public sealed class InputModule : ModuleBase {
         inputActions.RightStick.InvokeMethod("Update", tick, dt);
 
         if (!Paused) MaintainInputHandler();
+        SyncActiveController();
     }
 
     // The necessary parts from InputHandler.Update.
@@ -189,9 +190,14 @@ public sealed class InputModule : ModuleBase {
         // ListenForDreamNail skips forever). Inlined to skip PlayingInput's CheatManager.IsOpen read.
         if (ih.inputActions != null && !ih.inputActions.DreamNail.IsPressed)
             ih.ForceDreamNailRePress = false;
+    }
 
-        // Mirror HK's active controller onto Silksong's InputHandler (its own InControl never runs); keyboard-only menu
-        // shortcuts and the glyph UIs read it. Edge-only, then fire RefreshActiveControllerEvent so glyphs recompute.
+    // Mirror HK's active controller onto Silksong's InputHandler (its own InControl never runs); keyboard-only menu
+    // shortcuts, the menu action mapping and the glyph UIs read it, also while an inventory pauses the game. Edge-only,
+    // then fire RefreshActiveControllerEvent so glyphs recompute.
+    private static void SyncActiveController() {
+        var ih = SilksongBootstrap.Handler;
+        if (!ih) return;
         var hkController = InputHandler.Instance
             ? (Silksong::InControl.BindingSourceType)(int)InputHandler.Instance.lastActiveController
             : Silksong::InControl.BindingSourceType.KeyBindingSource;
