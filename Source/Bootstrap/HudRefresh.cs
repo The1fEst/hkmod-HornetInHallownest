@@ -44,6 +44,16 @@ internal static class HudRefresh {
         if (spool && spool.isActiveAndEnabled) spool.DrawSpool();
     }
 
+    // Hiding this HUD disables the bind orb frame, which drops its appeared state and its crest routine (the Hunter
+    // meter), and only Silksong's own HUD appear brings them back. Forget the drawn crest so the current one is redrawn.
+    internal static void RefreshBindOrbFrame() {
+        var frame = Object.FindAnyObjectByType<Silksong::BindOrbHudFrame>();
+        if (!frame) return;
+        frame.SetFieldValue("currentFrameCrest", null);
+        frame.SetFieldValue("currentFrameAnims", null);
+        frame.AlreadyAppeared();
+    }
+
     // ObjectPool.RecycleAll pulls the spool's chunks back into the pool. Silksong destroys the HUD along with it on quit,
     // but this rig survives, so the spool would keep them listed and the pool would hand them out again as new chunks.
     internal static void ForgetSilkChunks() {
