@@ -9,7 +9,6 @@ namespace HornetInHallownest.Modules;
 //   - PlayMaker global "Hero" var (most enemy/cutscene/UI FSMs)
 //   - LineOfSightDetector + the GetHero action
 //   - SoulOrb (a plain MonoBehaviour reading HeroController.instance directly) + soul->silk conversion
-//   - CameraTarget + CameraController (follow state: falling, look up/down, facing, dash)
 public sealed class HeroTargetModule : ModuleBase {
     public override string Id => "hero-target";
 
@@ -27,7 +26,8 @@ public sealed class HeroTargetModule : ModuleBase {
 
         // The camera follows Hornet's transform (RetargetCamera) but reads the hero's state off HeroController.instance,
         // the inert Knight whose cState froze on deactivation: a frozen `falling` glues the camera to her Y (fallStick),
-        // look up/down never triggers, the look-ahead keeps his facing. Mirror her state onto him for the call.
+        // look up/down never triggers, the look-ahead keeps his facing. Mirror her state onto him for the call, and her
+        // position too: CameraController's look offset is relative to hero_ctrl.transform.
         Detour(typeof(CameraTarget), "Update", (Action<Action<CameraTarget>, CameraTarget>)OnCameraUpdate);
         Detour(typeof(CameraController), "LateUpdate",
             (Action<Action<CameraController>, CameraController>)OnCameraUpdate);
@@ -113,7 +113,6 @@ public sealed class HeroTargetModule : ModuleBase {
 
     #region Camera
 
-    // The Knight's position matters too: CameraController's look offset is relative to hero_ctrl.transform.
     private void OnCameraUpdate<T>(Action<T> orig, T self) {
         var knight = HeroController.UnsafeInstance;
         var hornet = HornetSpawner.Hornet;
