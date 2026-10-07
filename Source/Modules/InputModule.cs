@@ -10,6 +10,10 @@ using Modding;
 using UnityEngine;
 using SsActions = Silksong::HeroActions;
 using SsAction = Silksong::InControl.PlayerAction;
+using SsInputHandler = Silksong::InputHandler;
+using SsInputControlType = Silksong::InControl.InputControlType;
+using SsKey = Silksong::InControl.Key;
+using SsMouse = Silksong::InControl.Mouse;
 
 namespace HornetInHallownest.Modules;
 
@@ -73,6 +77,47 @@ public sealed class InputModule : ModuleBase {
         Detour(typeof(InputHandler), nameof(InputHandler.MapControllerButtons), OnMapControllerButtons);
         Detour(typeof(InputHandler), nameof(InputHandler.SendKeyBindingsToGameSettings), OnBindingsChanged);
         Detour(typeof(InputHandler), nameof(InputHandler.RemapUIButtons), OnBindingsChanged);
+
+        // Silksong's actions are only ever committed, never bound, so its button prompts showed "None". Answer its
+        // binding lookups with the HK action each one is fed from.
+        Detour(typeof(SsInputHandler), nameof(SsInputHandler.GetKeyBindingForAction), OnGetKeyBindingForAction);
+        Detour(typeof(SsInputHandler), nameof(SsInputHandler.GetButtonBindingForAction), OnGetButtonBindingForAction);
+    }
+
+    private SsInputHandler.KeyOrMouseBinding OnGetKeyBindingForAction(
+        Func<SsInputHandler, SsAction, SsInputHandler.KeyOrMouseBinding> orig, SsInputHandler self, SsAction action) {
+        if (SourceAction(action) is not { } source) return orig(self, action);
+        var binding = source.GetKeyOrMouseBinding();
+        if (binding.Mouse != Mouse.None)
+            return new SsInputHandler.KeyOrMouseBinding(
+                Enum.TryParse(binding.Mouse.ToString(), out SsMouse mouse) ? mouse : SsMouse.None);
+        return new SsInputHandler.KeyOrMouseBinding(
+            Enum.TryParse(binding.Key.ToString(), out SsKey key) ? key : SsKey.None);
+    }
+
+    private SsInputControlType OnGetButtonBindingForAction(Func<SsInputHandler, SsAction, SsInputControlType> orig,
+        SsInputHandler self, SsAction action) {
+        if (SourceAction(action) is not { } source) return orig(self, action);
+        return Enum.TryParse(source.GetControllerButtonBinding().ToString(), out SsInputControlType control)
+            ? control
+            : SsInputControlType.None;
+    }
+
+    // The HK-side action whose state is committed to `action`.
+    private PlayerAction? SourceAction(SsAction action) {
+        var ss = SilksongBootstrap.InputActions;
+        var hk = HkActions;
+        if (ss == null || hk == null) return null;
+        foreach (var (hkGet, ssGet) in mirror)
+            if (ssGet(ss) == action)
+                return hkGet(hk);
+        for (var i = 0; i < overridable.Length; i++)
+            if (overridable[i].Ss(ss) == action)
+                return overrideActions[i] ?? overridable[i].Hk?.Invoke(hk);
+        if (action == ss.MenuCancel) return hk.menuCancel;
+        if (menuButtons == null) return null;
+        if (action == ss.MenuExtra) return menuButtons.Slots[0];
+        return action == ss.MenuSuper ? menuButtons.Slots[1] : null;
     }
 
     private void OnMapControllerButtons(Action<InputHandler, GamepadType> orig, InputHandler self, GamepadType type) {
