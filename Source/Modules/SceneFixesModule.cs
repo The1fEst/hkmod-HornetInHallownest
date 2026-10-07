@@ -48,6 +48,9 @@ public sealed class SceneFixesModule : ModuleBase {
             case "Fungus1_04_boss":
                 FixDreamerFallGate("Dreamer Scene 1");
                 break;
+            case "Mines_31":
+                FixSuperDashGetFallGate();
+                break;
         }
     }
 
@@ -66,7 +69,8 @@ public sealed class SceneFixesModule : ModuleBase {
     }
 
     private IEnumerator WatchForVengefulSpiritGet() {
-        while (inShamanTemple && PlayerData.instance != null && PlayerData.instance.fireballLevel < 1) yield return null;
+        while (inShamanTemple && PlayerData.instance != null && PlayerData.instance.fireballLevel < 1)
+            yield return null;
         if (inShamanTemple && PlayerData.instance != null && PlayerData.instance.fireballLevel >= 1) EquipSilkSpear();
     }
 
@@ -126,18 +130,18 @@ public sealed class SceneFixesModule : ModuleBase {
 
     #region White_Palace_12 saws
 
-    private static readonly string[] WhitePalace12DisabledSaws = { "wp_saw (18)", "wp_saw (22)", "wp_saw (23)" };
+    private static readonly string[] whitePalace12DisabledSaws = ["wp_saw (18)", "wp_saw (22)", "wp_saw (23)"];
 
     private void DisableWhitePalace12Saws(Scene scene) {
         try {
             var count = 0;
             foreach (var root in scene.GetRootGameObjects())
-                if (Array.IndexOf(WhitePalace12DisabledSaws, root.name) >= 0) {
+                if (Array.IndexOf(whitePalace12DisabledSaws, root.name) >= 0) {
                     root.SetActive(false);
                     count++;
                 }
 
-            LogDebug($"disabled {count}/{WhitePalace12DisabledSaws.Length} saws");
+            LogDebug($"disabled {count}/{whitePalace12DisabledSaws.Length} saws");
         } catch (Exception e) {
             LogError(e.Message);
         }
@@ -186,6 +190,11 @@ public sealed class SceneFixesModule : ModuleBase {
     // (RegainControl). Without the raise, Hero Fall hangs no-input (verified: raising the gate live runs it to End).
     private void FixDreamerFallGate(string sceneObjectName) =>
         RaiseHeroLandGate(GameObject.Find(sceneObjectName), "Control", "Knight Scene Y");
+
+    // Crystal Heart `Inspect` FSM: Hero Back -> gate `Hero Y <= Knight Ground Y` (Fall) -> Land -> Prompt (sets
+    // hasSuperDash, item message) -> Regain Control.
+    private void FixSuperDashGetFallGate() =>
+        RaiseHeroLandGate(GameObject.Find("Super Dash Get/Inspect Region"), "Inspect", "Knight Ground Y");
 
     // How much higher Hornet's origin rests on a floor than the Knight's, from the live colliders (collider bottom =
     // offset.y - size.y/2). Returns 0 if either collider is missing (fail-safe: no patch).

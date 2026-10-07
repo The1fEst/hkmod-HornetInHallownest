@@ -15,4 +15,4 @@
 ## Double check before release
 - Lantern
 - possible softlocks waiting for fall landing, due to height difference:
-    `Crystal Shaman Mines_35, Super Dash Get Mines_31, Shiny Item DJ Abyss_21, Mines Lift Crossroads_45, Dreamer Scene 2 RestingGrounds_04, beasts den`
+    `Crystal Shaman Mines_35, Shiny Item DJ Abyss_21, Mines Lift Crossroads_45, Dreamer Scene 2 RestingGrounds_04, beasts den`
