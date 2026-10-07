@@ -210,7 +210,8 @@ internal static class GameCamerasBootstrap {
                 }
 
                 // Screen Fader: hazard respawn sends "HAZARD RESPAWN" to it to hide the hero during the get-up anim.
-                if (c.name is "Anchor TL" or "Screen Fader") continue;
+                // Status Vignette: the Beast Crest's rage tints the screen edges red through it.
+                if (c.name is "Anchor TL" or "Screen Fader" or "Status Vignette") continue;
 
                 c.gameObject.SetActive(false);
             }
