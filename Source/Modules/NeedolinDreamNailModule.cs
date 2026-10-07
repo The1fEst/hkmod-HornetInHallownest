@@ -1,6 +1,9 @@
 extern alias Silksong;
+using System;
+using GlobalEnums;
 using HornetInHallownest.Core;
 using HornetInHallownest.Util;
+using HutongGames.PlayMaker;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -18,6 +21,29 @@ public sealed class NeedolinDreamNailModule : ModuleBase {
     public override string Id => "needolin-dreamnail";
 
     public override void Initialize() {
+        // A dreamer's dream prompts "Hold [Cast] Focus" through the HUD Control Reminder's "Display" FSM; Hornet drains
+        // the dreamer with Needolin on the Dream Nail bind instead.
+        Detour(typeof(Fsm), "SwitchState", OnSwitchState, typeof(FsmState));
+    }
+
+    private static void OnSwitchState(Action<Fsm, FsmState> orig, Fsm self, FsmState to) {
+        orig(self, to);
+        if (self.Name != "Display" || self.GameObjectName != "Control Reminder") return;
+
+        var reminder = self.GameObject.transform;
+        var needolin = to.Name == "Focus" && HeroSwitch.HornetActive &&
+                       UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
+                           .StartsWith("Dream_Guardian_", StringComparison.Ordinal);
+        var cast = reminder.Find("ActionButton Cast");
+        if (cast && cast.TryGetComponent<ActionButtonIcon>(out var icon)) {
+            var action = needolin ? HeroActionButton.DREAM_NAIL : HeroActionButton.CAST;
+            if (icon.action != action) icon.SetAction(action);
+        }
+
+        var text = reminder.Find("Text");
+        if (!needolin || !text) return;
+        var label = Array.Find(text.GetComponents<Component>(), c => c.GetType().Name == "TextMeshPro");
+        if (label) label.SetPropertyValue("text", "Needolin");
     }
 
     protected override void OnDeinitialize() {
