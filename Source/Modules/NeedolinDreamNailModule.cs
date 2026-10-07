@@ -1,5 +1,4 @@
 extern alias Silksong;
-extern alias SilksongPM;
 using HornetInHallownest.Core;
 using HornetInHallownest.Util;
 using UnityEngine;
@@ -14,7 +13,6 @@ public sealed class NeedolinDreamNailModule : ModuleBase {
 
     private GameObject? hitboxGo;
     private Collider2D? collider;
-    private SilksongPM::PlayMakerFSM? silkSpecials;
     private bool wasPlaying;
 
     public override string Id => "needolin-dreamnail";
@@ -26,15 +24,16 @@ public sealed class NeedolinDreamNailModule : ModuleBase {
         if (hitboxGo) Object.Destroy(hitboxGo);
         hitboxGo = null;
         collider = null;
-        silkSpecials = null;
         wasPlaying = false;
     }
 
     public override void HornetActiveUpdate(Silksong::HeroController hero) {
-        var playing = IsNeedolinPlaying(hero);
-        if (playing == wasPlaying) return; 
+        // Not Silk Specials' "Needolin Sub" state: holding the button while CanPlayNeedolin() fails re-enters it every
+        // few frames, and each re-entry would dream-impact (white flash) everything in range.
+        var playing = Silksong::HeroPerformanceRegion.IsPerforming;
+        if (playing == wasPlaying) return;
         wasPlaying = playing;
-        
+
         NeedolinToggled(hero, playing);
     }
 
@@ -55,20 +54,6 @@ public sealed class NeedolinDreamNailModule : ModuleBase {
         // Frees an already-wounded HK dreamer (drains on "DREAM FOCUS START"). Vanilla broadcasts this while Focus is
         // held; Needolin is Hornet's sustained-focus equivalent. Global like vanilla, only a wounded dreamer reacts.
         PlayMakerFSM.BroadcastEvent("DREAM FOCUS START");
-    }
-
-    private bool IsNeedolinPlaying(Silksong::HeroController hero) {
-        if (!silkSpecials) {
-            // TODO: perf
-            foreach (var f in hero.GetComponents<SilksongPM::PlayMakerFSM>()) {
-                if (f.FsmName == "Silk Specials") {
-                    silkSpecials = f;
-                    break;
-                }
-            }
-        }
-
-        return silkSpecials && silkSpecials.ActiveStateName == "Needolin Sub";
     }
 
     private void EnsureHitbox(Silksong::HeroController hero) {
