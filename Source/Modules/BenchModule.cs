@@ -1,7 +1,12 @@
 extern alias Silksong;
 using System;
+using System.Collections.Generic;
 using HornetInHallownest.Core;
+using HornetInHallownest.Util;
 using Modding;
+using SReplenishMethod = Silksong::ToolItemManager.ReplenishMethod;
+using SReplenishResources = Silksong::ToolItem.ReplenishResources;
+using SReplenishUsages = Silksong::ToolItem.ReplenishUsages;
 
 namespace HornetInHallownest.Modules;
 
@@ -11,6 +16,34 @@ public sealed class BenchModule : ModuleBase {
 
     public override void Initialize() {
         ModHooks.SetPlayerBoolHook += OnSetBool;
+        Detour(typeof(Silksong::ToolItemManager), "TryReplenishTools", OnTryReplenishTools, typeof(bool),
+            typeof(SReplenishMethod));
+    }
+
+    // The Architect Crest's quick craft pays in shell shards, which HK doesn't have; refill the tools it would refill
+    // for free instead, like the bench does.
+    private static bool OnTryReplenishTools(Func<bool, SReplenishMethod, bool> orig, bool doReplenish,
+        SReplenishMethod method) {
+        if (method != SReplenishMethod.QuickCraft) return orig(doReplenish, method);
+        var tools = typeof(Silksong::ToolItemManager).InvokeMethod<List<Silksong::ToolItem>>("GetCurrentEquippedTools");
+        if (tools == null) return false;
+
+        var pd = Silksong::PlayerData.instance;
+        var canRefill = false;
+        foreach (var tool in tools) {
+            if (!tool || !tool.IsAutoReplenished() || tool.ReplenishResource == SReplenishResources.None ||
+                tool.ReplenishUsage == SReplenishUsages.OneForOne) continue;
+            var data = pd.GetToolData(tool.name);
+            var storage = Silksong::ToolItemManager.GetToolStorageAmount(tool);
+            if (data.AmountLeft >= storage) continue;
+            canRefill = true;
+            if (!doReplenish) continue;
+            data.AmountLeft = storage;
+            pd.SetToolData(tool.name, data);
+        }
+
+        if (canRefill && doReplenish) Silksong::ToolItemManager.ReportAllBoundAttackToolsUpdated();
+        return canRefill;
     }
 
     protected override void OnDeinitialize() {
