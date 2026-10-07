@@ -3,6 +3,7 @@
 ## _Unreleased_
 
 - Fix softlock when picking up the Crystal Heart as Hornet
+- Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 
 ## v0.3.0
 

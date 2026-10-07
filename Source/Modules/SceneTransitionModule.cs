@@ -79,7 +79,8 @@ public sealed class SceneTransitionModule : ModuleBase {
                     (Func<Func<string, LoadSceneParameters, Scene>, string, LoadSceneParameters, Scene>)OnLoadScene));
             else if (m.Name == "LoadSceneAsync")
                 Track(new Hook(m,
-                    (Func<Func<string, LoadSceneParameters, AsyncOperation>, string, LoadSceneParameters, AsyncOperation>)
+                    (Func<Func<string, LoadSceneParameters, AsyncOperation>, string, LoadSceneParameters,
+                        AsyncOperation>)
                     OnLoadSceneAsync));
         }
     }
@@ -156,9 +157,10 @@ public sealed class SceneTransitionModule : ModuleBase {
 
     private void OnTakeDamage(
         Action<Silksong::HeroController, GameObject, SCollisionSide, int, SHazardType, SDamageFlags> orig,
-        Silksong::HeroController self, GameObject go, SCollisionSide side, int dmg, SHazardType hazard, SDamageFlags flags) {
+        Silksong::HeroController self, GameObject go, SCollisionSide side, int dmg, SHazardType hazard,
+        SDamageFlags flags) {
         if (arrivalInvulnerable) return;
-        orig(self, go!, side, dmg, hazard, flags);
+        orig(self, go, side, dmg, hazard, flags);
     }
 
     private void OnSetHazardRespawn(Action<PlayerData, Vector3, bool> orig, PlayerData self, Vector3 pos, bool facing) {
@@ -169,7 +171,8 @@ public sealed class SceneTransitionModule : ModuleBase {
     private void OnSetHazardRespawnMarker(Action<PlayerData, HazardRespawnMarker> orig, PlayerData self,
         HazardRespawnMarker marker) {
         orig(self, marker);
-        if (marker) Silksong::PlayerData.instance.SetHazardRespawn(marker.transform.position, marker.respawnFacingRight);
+        if (marker)
+            Silksong::PlayerData.instance.SetHazardRespawn(marker.transform.position, marker.respawnFacingRight);
     }
 
     private void OnEnterSceneDreamGate(Action<HeroController> orig, HeroController self) {
@@ -196,6 +199,9 @@ public sealed class SceneTransitionModule : ModuleBase {
         }
         else if (HeroSwitch.HornetActive && knight.sceneEntryGate) {
             StartCoroutine(dreamReturnPending ? DreamReturnEntry(knight) : RunEntry(knight));
+            // A dream return walks in through this gate entry, not the dream-gate branch. End the non-colliding park now:
+            // the entry's FinishedEnteringScene re-enables gravity, and on Ignore Raycast she'd fall through the floor.
+            dreamHeroPlaced = true;
         }
         else {
             SnapHornetToKnight(knight); // Knight active: Hornet is an inert prop, just relocate her
@@ -269,6 +275,7 @@ public sealed class SceneTransitionModule : ModuleBase {
                 }
             }
             else if (grabbed && !parent) break; // lift finished the ride and released her at the top
+
             yield return null;
         }
 
@@ -306,22 +313,25 @@ public sealed class SceneTransitionModule : ModuleBase {
     //     the wide Abyss Pit spike -> keep her on Ignore Raycast so she collides with nothing (like HK's warp).
     //  2. placed (dream-gate branch set dreamHeroPlaced): restore Player so she collides with the arena platform and stays
     //     (HK restores it ~0.7s late, during which she'd otherwise fall through the floor into the pit).
-    private static readonly int PlayerLayer = LayerMask.NameToLayer("Player");
-    private static readonly int IgnoreRaycastLayer = LayerMask.NameToLayer("Ignore Raycast");
+    private static readonly int playerLayer = LayerMask.NameToLayer("Player");
+    private static readonly int ignoreRaycastLayer = LayerMask.NameToLayer("Ignore Raycast");
 
-    private System.Collections.IEnumerator ManageArrivalLayer() {
+    private IEnumerator ManageArrivalLayer() {
         var hero = HornetSpawner.Hornet;
         if (!hero) yield break;
         // see EnterSceneDreamGate
         hero.AffectedByGravity(false);
-        for (var i = 0; i < 120 && !dreamHeroPlaced && hero; i++) { // park: non-colliding until placed (cap ~2.4s)
-            hero.gameObject.layer = IgnoreRaycastLayer;
+        for (var i = 0; i < 120 && !dreamHeroPlaced && hero; i++) {
+            // park: non-colliding until placed (cap ~2.4s)
+            hero.gameObject.layer = ignoreRaycastLayer;
             yield return new WaitForFixedUpdate();
         }
+
         if (hero && !dreamHeroPlaced) hero.AffectedByGravity(true);
 
-        for (var i = 0; i < 45 && hero; i++) { // placed: hold Player through HK's late restore so there's no gap
-            if (hero.gameObject.layer != PlayerLayer) hero.gameObject.layer = PlayerLayer;
+        for (var i = 0; i < 45 && hero; i++) {
+            // placed: hold Player through HK's late restore so there's no gap
+            if (hero.gameObject.layer != playerLayer) hero.gameObject.layer = playerLayer;
             yield return new WaitForFixedUpdate();
         }
 
@@ -359,7 +369,8 @@ public sealed class SceneTransitionModule : ModuleBase {
 
     // For boss scene entry there's a Dream Entry FSM which leaves enterWithoutInput.
     // For the Hall of Gods return, the Knight uses its Dream Return FSM, we have to do it here.
-    private void OnFinishedEnteringScene(Action<Silksong::HeroController, bool, bool> orig, Silksong::HeroController self,
+    private void OnFinishedEnteringScene(Action<Silksong::HeroController, bool, bool> orig,
+        Silksong::HeroController self,
         bool setHazardMarker, bool preventRunBob) {
         var wasEnterWithoutInput = self.enterWithoutInput;
         var isMoveResume = self.exitedSuperDashing || self.exitedQuake || self.exitedSprinting;
@@ -379,6 +390,7 @@ public sealed class SceneTransitionModule : ModuleBase {
             LogDebug("skipped enterWithoutInput close: boss scene, its own Dream Entry FSM owns control");
             return;
         }
+
         self.RegainControl();
         self.StartAnimationControl();
         self.AcceptInput();
@@ -410,7 +422,7 @@ public sealed class SceneTransitionModule : ModuleBase {
         Object.Destroy(gateGo);
     }
 
-    internal bool entryInProgress;
+    private bool entryInProgress;
 
     // Inactive Silksong TransitionPoint mirroring HK's gate: GetGatePosition parses the name for the side, the rest are
     // fields identical in both games. Inactive so its Awake (needs the Silksong scene-setup env) never runs; EnterScene
