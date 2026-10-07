@@ -33,6 +33,7 @@
 - Fix Wanderer Crest critical hits on enemies dealing normal damage without their effect and sound
 - Fix the frame around Hornet's silk spool not changing with her crest and not showing the evolved Hunter Crest's combo
   after her HUD was hidden
+- Fix the Beast Crest's rage not tinting the screen edges red
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings
