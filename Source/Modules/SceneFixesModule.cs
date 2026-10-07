@@ -191,8 +191,6 @@ public sealed class SceneFixesModule : ModuleBase {
     private void FixDreamerFallGate(string sceneObjectName) =>
         RaiseHeroLandGate(GameObject.Find(sceneObjectName), "Control", "Knight Scene Y");
 
-    // Crystal Heart `Inspect` FSM: Hero Back -> gate `Hero Y <= Knight Ground Y` (Fall) -> Land -> Prompt (sets
-    // hasSuperDash, item message) -> Regain Control.
     private void FixSuperDashGetFallGate() =>
         RaiseHeroLandGate(GameObject.Find("Super Dash Get/Inspect Region"), "Inspect", "Knight Ground Y");
 
