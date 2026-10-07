@@ -9,8 +9,10 @@ using Modding;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
+// ReSharper disable once CheckNamespace
 namespace HornetInHallownest;
 
+// ReSharper disable once ClassNeverInstantiated.Global (the Modding API instantiates mods via reflection)
 public class HornetInHallownest() : Mod("HornetInHallownest"), ITogglableMod, ILocalSettings<HornetSaveData>,
     IGlobalSettings<HornetGlobalSettings> {
     private readonly ModuleHost moduleHost = new();
@@ -87,7 +89,8 @@ public class HornetInHallownest() : Mod("HornetInHallownest"), ITogglableMod, IL
         Paths.SilksongInstallOverride = globalSettings.SilksongPath;
 
         if (!SilksongSetup.EnsureInstalled()) {
-            throw new Exception("Installed missing Silksong support files. Please restart Hollow Knight to finish loading HornetInHallownest.");
+            throw new Exception(
+                "Installed missing Silksong support files. Please restart Hollow Knight to finish loading HornetInHallownest.");
         }
 
         Bootstrap();
@@ -123,6 +126,7 @@ public class HornetInHallownest() : Mod("HornetInHallownest"), ITogglableMod, IL
         moduleHost.Add(new HitBridgeModule());
         moduleHost.Add(new GameObjectLookupModule());
         moduleHost.Add(new ConveyorModule());
+        moduleHost.Add(new QuickMapModule());
         moduleHost.Add(new FsmMethodCallRemapModule());
         moduleHost.Add(new HeroTargetModule());
         moduleHost.Add(new InventoryModule());

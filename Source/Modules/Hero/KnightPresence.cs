@@ -16,9 +16,9 @@ internal sealed class KnightPresence : HeroPresence {
         // Disable every FSM on the Knight (root + children): the ability FSMs (Superdash/Spell Control/Nail Arts) listen
         // for input independently of HeroController.enabled and would fire on shared input; the rest target the PlayMaker
         // "Hero" global (repointed to Hornet) and would act on her. Remember only what we actually disabled, so restore
-        // doesn't re-enable FSMs the game itself had off.
+        // doesn't re-enable FSMs the game itself had off. The quick map FSM stays: QuickMapModule points it at Hornet.
         foreach (var fsm in go.GetComponentsInChildren<PlayMakerFSM>(true))
-            if (fsm.enabled) {
+            if (fsm.enabled && fsm.FsmName != QuickMapModule.MapControlFsm) {
                 fsm.enabled = false;
                 disabledByUs.Add(fsm);
             }
