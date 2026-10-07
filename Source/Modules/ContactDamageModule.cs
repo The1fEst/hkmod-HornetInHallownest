@@ -24,7 +24,7 @@ public sealed class ContactDamageModule : ModuleBase {
     }
 
     private void OnCheckForDamage(Action<SHeroBox, GameObject> orig, SHeroBox self, GameObject other) {
-        orig(self, other); 
+        orig(self, other);
         if (!other || !self) return;
         if (!HeroSwitch.HornetActive) return;
         try {
@@ -39,7 +39,7 @@ public sealed class ContactDamageModule : ModuleBase {
                 if (hkHazard >= 2) ssHazard = MapHazard(hkHazard);
             }
             else {
-                var damageHero = other.GetComponentInParent<DamageHero>();
+                var damageHero = other.GetComponent<DamageHero>();
                 if (damageHero && damageHero.enabled) {
                     if (ShadowDashModule.ShadeDashActive &&
                         (damageHero.shadowDashHazard || IsShadeDashAllowed(other))) return;
@@ -76,7 +76,7 @@ public sealed class ContactDamageModule : ModuleBase {
     // Allowlist for specific attacks that are impossible to dodge and are balanced around shade cloak.
     private static bool IsShadeDashAllowed(GameObject go) {
         var t = go.transform;
-        
+
         // traitor lord shockwave
         if (t.name == "hurtbox"
             && t.parent && t.parent.name == "slash_core"
