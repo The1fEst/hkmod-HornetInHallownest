@@ -65,14 +65,13 @@ public sealed class QuickMapModule : ModuleBase {
         return CancelPaneMove(self, currentPane);
     }
 
-    // Direct moves, e.g. selecting the map's pane icon. Without a current pane the inventory is opening, never onto the map.
+    // Direct moves onto the map, e.g. selecting its pane icon. Opening the inventory also lands here (with the last pane
+    // still current), so other indices must pass even mid-switch: that's how switching back opens the target pane.
     private SInventoryPane OnSetCurrentPane(Func<SInventoryPaneList, int, SInventoryPane?, SInventoryPane> orig,
         SInventoryPaneList self, int index, SInventoryPane? currentPane) {
-        if (!HeroSwitch.HornetActive || !currentPane) return orig(self, index, currentPane);
-        if (switchingInventories) return CancelPaneMove(self, currentPane);
-        if (index != MapPaneIndex) return orig(self, index, currentPane);
+        if (!HeroSwitch.HornetActive || index != MapPaneIndex || !currentPane) return orig(self, index, currentPane);
 
-        StartCoroutine(SwitchToHkInventoryMap(self));
+        if (!switchingInventories) StartCoroutine(SwitchToHkInventoryMap(self));
         return CancelPaneMove(self, currentPane);
     }
 
