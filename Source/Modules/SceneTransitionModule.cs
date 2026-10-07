@@ -37,6 +37,7 @@ public sealed class SceneTransitionModule : ModuleBase {
     private bool arrivalInvulnerable; // block hazard damage through the dream-arrival window (park + placement settle)
     private bool dreamPending;
     private bool playingDreamArrival;
+    private bool statueReturn;
 
     private string? dreamGate;
 
@@ -151,6 +152,10 @@ public sealed class SceneTransitionModule : ModuleBase {
         // before Tick walks Hornet in: Ruins1_31's lift wall keeps its room masked unless she's already left of it.
         Detour(typeof(HeroController), "SendHeroInPosition", OnSendHeroInPosition, typeof(bool));
 
+        // Scene FSMs ask the "Hero" var (Hornet) which gate it entered by, e.g. the Hall of Gods statue doors that slide
+        // the HUD back in after a boss. HK enters the scene on the Knight; Hornet's own entry gate is stale or unset.
+        Detour(typeof(Silksong::HeroController), "GetEntryGateName", OnGetEntryGateName);
+
         Detour(typeof(GameManager), "LevelActivated", OnLevelActivated, typeof(Scene), typeof(Scene));
 
         // Arrival i-frames: block damage through the dream-arrival window (see arrivalInvulnerable). Needed because on a
@@ -185,6 +190,12 @@ public sealed class SceneTransitionModule : ModuleBase {
         orig(self, forceDirect);
     }
 
+    private static string OnGetEntryGateName(Func<Silksong::HeroController, string> orig,
+        Silksong::HeroController self) {
+        var knight = HeroController.UnsafeInstance;
+        return HeroSwitch.HornetActive && knight ? knight.GetEntryGateName() : orig(self);
+    }
+
     private void OnEnterSceneDreamGate(Action<HeroController> orig, HeroController self) {
         orig(self);
         if (HeroSwitch.HornetActive) dreamGateEntryPending = true;
@@ -206,8 +217,10 @@ public sealed class SceneTransitionModule : ModuleBase {
             SnapHornetToKnight(knight);
             var hornet = HornetSpawner.Hornet;
             if (hornet) {
+                // A death in Godhome returns through "door_dreamReturn", which EnterHero swaps for the statue door.
+                statueReturn = knight.GetEntryGateName().StartsWith("door_dreamReturnGG", StringComparison.Ordinal);
                 hornet.EnterSceneDreamGate();
-                StartCoroutine(PlayDreamArrival(hornet));
+                StartCoroutine(statueReturn ? PlayStatueReturn(hornet) : PlayDreamArrival(hornet));
             }
 
             dreamHeroPlaced = true;
@@ -413,7 +426,7 @@ public sealed class SceneTransitionModule : ModuleBase {
         // arrival (e.g. the White Palace half-Kingsoul dream) HK's Knight arrival FSM sends it; Hornet has none, so a
         // no-op here left a permanent whitescreen. Send it ourselves (same call the dream-return path uses). Harmless
         // no-op if the blanker isn't faded in (Idle/Faded Out ignore FADE OUT).
-        FadeBlankerOut("Blanker White");
+        if (!statueReturn) FadeBlankerOut("Blanker White");
         LogDebug("closed enterWithoutInput entry (RegainControl+AcceptInput+FADE OUT white; no HK arrival FSM here)");
     }
 
@@ -496,6 +509,48 @@ public sealed class SceneTransitionModule : ModuleBase {
             foreach (var knightRenderer in knightRenderers) knightRenderer.enabled = false;
         } finally {
             playingDreamArrival = false;
+            if (hero) {
+                hero.RegainControl();
+                hero.StartAnimationControl();
+            }
+        }
+    }
+
+    // Back at a Hall of Gods statue, HK's Knight-only Dream Return FSM lays the Knight down and gets him up on the first
+    // input, broadcasting DREAM WAKE: the statue door waits for it to finish its transition. Do the same with Hornet. The
+    // blankers fade out on the Knight's beat, once the door's own transition already covers the screen. She's laid back
+    // down every frame: after a death, DeathModule's revive hands her control and the idle clip right after this starts.
+    private IEnumerator PlayStatueReturn(Silksong::HeroController hero) {
+        playingDreamArrival = true;
+        try {
+            var start = Time.time;
+            var faded = false;
+            var input = InputHandler.Instance.inputActions;
+            while (Time.time < start + 1f || !(input.up.WasPressed || input.down.WasPressed || input.left.WasPressed ||
+                                               input.right.WasPressed || input.attack.WasPressed ||
+                                               input.jump.WasPressed)) {
+                if (!hero.controlReqlinquished) hero.RelinquishControl();
+                if (hero.AnimCtrl.animator.CurrentClip?.name != "Prostrate") {
+                    hero.StopAnimationControl();
+                    hero.AnimCtrl.PlayClipForced("Prostrate");
+                }
+
+                if (!faded && Time.time >= start + 0.5f) {
+                    FadeBlankerOut("Blanker White");
+                    FadeBlankerOut("Blanker");
+                    faded = true;
+                }
+
+                yield return null;
+            }
+
+            PlayMakerFSM.BroadcastEvent("DREAM WAKE");
+            hero.AnimCtrl.PlayClipForced("Prostrate Rise");
+            var rise = hero.AnimCtrl.animator.CurrentClip;
+            while (rise != null && hero.AnimCtrl.animator.IsPlaying(rise)) yield return null;
+        } finally {
+            playingDreamArrival = false;
+            statueReturn = false;
             if (hero) {
                 hero.RegainControl();
                 hero.StartAnimationControl();
@@ -588,8 +643,11 @@ public sealed class SceneTransitionModule : ModuleBase {
 
     private IEnumerator FadeInAfterSettle() {
         yield return new WaitForSeconds(0.5f); // let the new scene's blanker FSMs (re)init before we send the event
-        FadeBlankerOut("Blanker White");
-        FadeBlankerOut("Blanker");
+        if (!statueReturn) {
+            FadeBlankerOut("Blanker White");
+            FadeBlankerOut("Blanker");
+        }
+
         CompleteArrival();
     }
 
@@ -634,7 +692,7 @@ public sealed class SceneTransitionModule : ModuleBase {
         foreach (var fsm in go.GetComponents<PlayMakerFSM>()) fsm.SendEvent("FADE OUT");
     }
 
-    private static GameObject? FindBlanker(string childName) {
+    internal static GameObject? FindBlanker(string childName) {
         var gc = GameCameras.instance;
         if (gc && gc.hudCamera) {
             var t = gc.hudCamera.transform.Find(childName);

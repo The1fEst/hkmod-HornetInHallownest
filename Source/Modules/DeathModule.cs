@@ -17,6 +17,10 @@ namespace HornetInHallownest.Modules;
 // TODO: currently all deaths are nonlethal, fix lethal pathway and cocoon spawns
 public sealed class DeathModule : ModuleBase {
     private const float DeathWait = 2.5f; // lets the Silksong death anim play before HK fades (mirrors HK's DEATH_WAIT)
+
+    // HK's "Hero Death Anim" fades the white blanker in over DreamFadeTime, DreamFadeWait before a dream return.
+    private const float DreamFadeTime = 1.5f;
+    private const float DreamFadeWait = 1.75f;
     private bool handling;
     private bool wasDead;
 
@@ -103,7 +107,15 @@ public sealed class DeathModule : ModuleBase {
             yield break;
         }
 
-        yield return new WaitForSeconds(DeathWait);
+        yield return new WaitForSeconds(DeathWait - DreamFadeWait);
+        var blanker = SceneTransitionModule.FindBlanker("Blanker White");
+        var blankerFsm = blanker ? FSMUtility.LocateFSM(blanker, "Blanker Control") : null;
+        if (blankerFsm) {
+            FSMUtility.SetFloat(blankerFsm, "Fade Time", DreamFadeTime);
+            blankerFsm.SendEvent("FADE IN");
+        }
+
+        yield return new WaitForSeconds(DreamFadeWait);
 
         var knight = HeroController.UnsafeInstance;
         if (!knight) yield break;
