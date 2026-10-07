@@ -20,7 +20,8 @@ public sealed class InputModule : ModuleBase {
     // Actions mirrored from HK, not rebindable (UI, movement).
     // MenuCancel is handled separately (ESC).
     private static readonly (Func<HeroActions, PlayerAction> hk, Func<SsActions, SsAction> ss)[] mirror = [
-        (h => h.paneLeft, s => s.PaneLeft), (h => h.paneRight, s => s.PaneRight), (h => h.menuSubmit, s => s.MenuSubmit),
+        (h => h.paneLeft, s => s.PaneLeft), (h => h.paneRight, s => s.PaneRight),
+        (h => h.menuSubmit, s => s.MenuSubmit),
         (h => h.rs_up, s => s.RsUp), (h => h.rs_down, s => s.RsDown), (h => h.rs_left, s => s.RsLeft),
         (h => h.rs_right, s => s.RsRight)
     ];
@@ -41,7 +42,8 @@ public sealed class InputModule : ModuleBase {
         new(s => s.OpenInventory, h => h.openInventory, a => a.OpenInventory, SnapshotKey: true, PrimaryOnly: true),
         // without HK equivalent
         new(s => s.Taunt, null, a => a.Taunt, ControllerSetting: s => s.TauntController),
-        new(s => s.OpenTools, null, a => a.OpenInventoryTools, ControllerSetting: s => s.OpenToolsController, PrimaryOnly: true)
+        new(s => s.OpenTools, null, a => a.OpenInventoryTools, ControllerSetting: s => s.OpenToolsController,
+            PrimaryOnly: true)
     ];
 
     // Global-persisted binds
@@ -94,7 +96,7 @@ public sealed class InputModule : ModuleBase {
 
             var action = overrideSet.Slots[i];
             action.AddKeyOrMouseBinding(parsed);
-            
+
             if (hk != null) InheritDeviceBindings(def.Hk?.Invoke(hk), action);
             AddControllerBinding(action, def.ControllerSetting?.Invoke(Settings));
             overrideActions[i] = action;
@@ -110,7 +112,8 @@ public sealed class InputModule : ModuleBase {
 
     private void AddControllerBinding(PlayerAction action, string? buttonName) {
         if (buttonName == null) return;
-        if (Enum.TryParse(buttonName, true, out InputControlType control)) action.AddBinding(new DeviceBindingSource(control));
+        if (Enum.TryParse(buttonName, true, out InputControlType control))
+            action.AddBinding(new DeviceBindingSource(control));
         else LogError($"unparseable controller binding '{buttonName}'");
     }
 
@@ -128,7 +131,9 @@ public sealed class InputModule : ModuleBase {
         var hk = HkActions;
         // Only the primary owns the inventory: while co-driven but not primary the Knight owns it, so leave HK's key on.
         var primary = HeroSwitch.HornetActive;
-        SetHkInventoryEnabled(hk, !primary);
+        // While HK's inventory is open its key must close it, and Silksong's inventory must not open on top.
+        var hkInventoryOpen = InventoryModule.HkInventoryOpen;
+        SetHkInventoryEnabled(hk, !primary || hkInventoryOpen);
         tick++;
         var dt = Time.deltaTime;
 
@@ -142,7 +147,7 @@ public sealed class InputModule : ModuleBase {
             var act = def.Ss(inputActions);
             var ov = overrideActions[i];
             var pressed = ov?.IsPressed ?? def.Hk != null && hk != null && def.Hk(hk).IsPressed;
-            if (def.PrimaryOnly && !primary) pressed = false;
+            if (def.PrimaryOnly && (!primary || hkInventoryOpen)) pressed = false;
             act.CommitWithState(pressed, tick, dt);
         }
 
