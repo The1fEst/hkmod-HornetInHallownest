@@ -9,6 +9,7 @@
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings
 - Fix Trial of the Fool respawn platform not appearing after a spike hit as Hornet
+- Allow opening the quick map as Hornet outside of benches
 
 ## v0.3.0
 
