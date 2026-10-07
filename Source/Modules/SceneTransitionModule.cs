@@ -147,6 +147,10 @@ public sealed class SceneTransitionModule : ModuleBase {
         // redirects it), so Hornet's never runs. Flag it; Tick positions her and runs hers.
         Detour(typeof(HeroController), "EnterSceneDreamGate", OnEnterSceneDreamGate);
 
+        // Scene FSMs waiting on heroInPosition (WaitForHeroInPosition) read the hero's position right in the handler,
+        // before Tick walks Hornet in: Ruins1_31's lift wall keeps its room masked unless she's already left of it.
+        Detour(typeof(HeroController), "SendHeroInPosition", OnSendHeroInPosition, typeof(bool));
+
         Detour(typeof(GameManager), "LevelActivated", OnLevelActivated, typeof(Scene), typeof(Scene));
 
         // Arrival i-frames: block damage through the dream-arrival window (see arrivalInvulnerable). Needed because on a
@@ -174,6 +178,11 @@ public sealed class SceneTransitionModule : ModuleBase {
         orig(self, marker);
         if (marker)
             Silksong::PlayerData.instance.SetHazardRespawn(marker.transform.position, marker.respawnFacingRight);
+    }
+
+    private void OnSendHeroInPosition(Action<HeroController, bool> orig, HeroController self, bool forceDirect) {
+        if (HeroSwitch.HornetActive && !liftArrivalPending) SnapHornetToKnight(self);
+        orig(self, forceDirect);
     }
 
     private void OnEnterSceneDreamGate(Action<HeroController> orig, HeroController self) {

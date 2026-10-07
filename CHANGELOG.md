@@ -12,6 +12,7 @@
 - Fix bounce shrooms not bouncing Hornet when she lands on them
 - Fix Hornet's side and up slashes passing through bounce shrooms instead of knocking her back
 - Fix Gruz Mother never waking up and her fight not starting when hit by Hornet
+- Fix the City of Tears toll bench room staying dark when Hornet enters it from the left
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings
