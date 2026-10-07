@@ -1,7 +1,6 @@
 extern alias Silksong;
 extern alias SilksongPM;
 using System;
-using System.Collections.Generic;
 using HornetInHallownest.Util;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -37,18 +36,10 @@ internal static class HudRefresh {
 
     // DrawSpool() resizes the spool bar from PlayerData.CurrentSilkMaxBasic; nothing else re-runs it after silkMax
     // changes mid-play (it's only called once at HUD bring-up).
+    // Skipped while Hornet's HUD is hidden: chunks spawned into it never Awake, so SilkChunk.Add throws on them and leaves
+    // them blank in the spool. SetHornetHudVisible redraws it when her HUD comes back.
     internal static void RefreshMaxSilkHud() {
-        Silksong::SilkSpool.Instance?.DrawSpool();
-    }
-
-    // Chunks already in the spool when Hornet's HUD is re-activated can stay frozen mid-animation or blank: the spool
-    // only animates chunks it adds or removes, so they stay that way until it empties and respawns them.
-    internal static void RefreshSilkChunks() {
         var spool = Silksong::SilkSpool.Instance;
-        var chunks = spool ? spool.GetFieldValue<List<Silksong::SilkChunk>>("silkChunks") : null;
-        if (chunks == null) return;
-        foreach (var chunk in chunks)
-            if (chunk)
-                chunk.PlayIdle();
+        if (spool && spool.isActiveAndEnabled) spool.DrawSpool();
     }
 }

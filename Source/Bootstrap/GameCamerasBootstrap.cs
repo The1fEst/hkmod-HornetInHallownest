@@ -279,7 +279,6 @@ internal static class GameCamerasBootstrap {
             typeof(Silksong::SilkSpool).SetPropertyValue("Instance", realSpool);
             try {
                 realSpool.DrawSpool();
-                HudRefresh.RefreshSilkChunks();
             } catch (Exception e) {
                 Log.Error($"[HUD] DrawSpool: {e.Message}");
             }
@@ -317,7 +316,7 @@ internal static class GameCamerasBootstrap {
         inGame.gameObject.SetActive(on);
         if (on) {
             ApplyHudScale(); // HudGlobalHide.OnEnable just reset Hud Canvas Offset; re-assert the shrink
-            HudRefresh.RefreshSilkChunks();
+            HudRefresh.RefreshMaxSilkHud();
             HornetHudShown?.Invoke();
         }
     }
