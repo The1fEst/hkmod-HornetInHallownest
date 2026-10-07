@@ -223,10 +223,11 @@ public sealed class InputModule : ModuleBase {
         SyncActiveController();
 
         // Silksong's listeners (e.g. ListenForCast, the bind) ignore input while its GameManager is paused, but the
-        // stand-in never pauses: the button that closes HK's pause menu also reached Hornet, e.g. B binding.
+        // stand-in never pauses: the button that closes HK's pause menu also reached Hornet, e.g. B binding. Hornet's
+        // inventory pauses HK too (InventoryModule) but must keep Silksong's own menu listeners running.
         var ssGm = Silksong::GameManager.instance;
         var hkGm = GameManager.instance;
-        if (ssGm && hkGm) ssGm.isPaused = hkGm.isPaused;
+        if (ssGm && hkGm) ssGm.isPaused = hkGm.isPaused && !Silksong::PlayerData.instance.isInventoryOpen;
     }
 
     // The necessary parts from InputHandler.Update.
