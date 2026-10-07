@@ -474,10 +474,15 @@ public sealed class SceneTransitionModule : ModuleBase {
     // HK's "Dream Entry" FSM hides the hero and plays a Knight sprite ("Knight Dream Arrival") before handing control
     // back, but Hornet's own EnterSceneDreamGate already accepts input, so she'd walk around unseen. Play Silksong's
     // memory wake-up (Prostrate, then Prostrate Rise) on the same beats instead and hold her control until she's up.
+    // Hall of Gods statue fights kneel the Knight instead, so she kneels and stands up from that.
+    private static readonly string[] dreamEntryKneelStates =
+        ["Start Kneeling", "Pause Kneeling", "Wait for Transition"];
+
     private static readonly string[] dreamEntryFadeStates =
         ["Start Fade", "Arrive Anim", "Wait for Anim", "Return Control"];
 
-    private static readonly string[] dreamEntryArriveStates = ["Arrive Anim", "Wait for Anim", "Return Control"];
+    private static readonly string[] dreamEntryArriveStates =
+        ["Arrive Anim", "Wait for Anim", "Return from Kneeling", "Return Control"];
 
     private IEnumerator PlayDreamArrival(Silksong::HeroController hero) {
         var entry = GameObject.Find("Dream Entry");
@@ -490,16 +495,20 @@ public sealed class SceneTransitionModule : ModuleBase {
         hero.RelinquishControl();
         try {
             var deadline = Time.unscaledTime + 10f;
-            while (Array.IndexOf(dreamEntryFadeStates, fsm.ActiveStateName) < 0 && Time.unscaledTime < deadline)
+            var kneeling = false;
+            while (Array.IndexOf(dreamEntryFadeStates, fsm.ActiveStateName) < 0 && Time.unscaledTime < deadline) {
+                kneeling = Array.IndexOf(dreamEntryKneelStates, fsm.ActiveStateName) >= 0;
+                if (kneeling) break;
                 yield return null;
+            }
 
             hero.StopAnimationControl();
             hero.GetComponent<MeshRenderer>().enabled = true;
-            hero.AnimCtrl.PlayClipForced("Prostrate");
+            hero.AnimCtrl.PlayClipForced(kneeling ? "Abyss Kneel Idle" : "Prostrate");
             while (Array.IndexOf(dreamEntryArriveStates, fsm.ActiveStateName) < 0 && Time.unscaledTime < deadline)
                 yield return null;
 
-            hero.AnimCtrl.PlayClipForced("Prostrate Rise");
+            hero.AnimCtrl.PlayClipForced(kneeling ? "Abyss Kneel to Stand" : "Prostrate Rise");
             var rise = hero.AnimCtrl.animator.CurrentClip;
             while (rise != null && hero.AnimCtrl.animator.IsPlaying(rise) && Time.unscaledTime < deadline) {
                 foreach (var knightRenderer in knightRenderers) knightRenderer.enabled = false;
