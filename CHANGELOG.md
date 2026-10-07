@@ -2,6 +2,8 @@
 
 ## _Unreleased_
 
+- Fix softlock when picking up the Crystal Heart as Hornet
+
 ## v0.3.0
 
 - Prevent HK iframes eating damage dealt in quick succession
