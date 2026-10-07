@@ -1,7 +1,10 @@
 extern alias Silksong;
 extern alias SilksongPM;
 using System;
+using System.Collections.Generic;
+using HornetInHallownest.Bootstrap;
 using HornetInHallownest.Core;
+using HornetInHallownest.Util;
 using HutongGames.PlayMaker;
 using UnityEngine;
 
@@ -11,9 +14,27 @@ namespace HornetInHallownest.Modules;
 public sealed class HeroBroadcastModule : ModuleBase {
     public override string Id => "broadcast";
 
+    // HK slides its HUD out for cutscenes and dialogue by sending these to Hud Canvas' "Slide Out" FSM. Hornet's
+    // separate Silksong HUD has its own "Slide Out" FSM taking the same events.
+    private static readonly HashSet<string> hudSlideEvents = ["OUT", "OUT INSTANT", "IN"];
+
     public override void Initialize() {
         Detour(typeof(Fsm), "BroadcastEventToGameObject", OnBroadcast,
             typeof(GameObject), typeof(FsmEvent), typeof(FsmEventData), typeof(bool), typeof(bool));
+        Detour(typeof(FSMUtility), "SendEventToGameObject", OnSendEventToGameObject,
+            typeof(GameObject), typeof(FsmEvent), typeof(bool));
+    }
+
+    private static void OnSendEventToGameObject(Action<GameObject, FsmEvent?, bool> orig, GameObject go, FsmEvent? ev,
+        bool isRecursive) {
+        orig(go, ev, isRecursive);
+        RelayHudSlide(go, ev?.Name);
+    }
+
+    private static void RelayHudSlide(GameObject go, string? eventName) {
+        if (!HeroSwitch.HornetActive || eventName == null || !hudSlideEvents.Contains(eventName)) return;
+        var hk = typeof(GameCameras).GetFieldValue<GameCameras>("_instance");
+        if (hk && go == hk.hudCanvas) GameCamerasBootstrap.SendHornetHudSlideEvent(eventName);
     }
 
     private void OnBroadcast(Action<Fsm, GameObject, FsmEvent?, FsmEventData?, bool, bool> orig, Fsm self,
@@ -21,6 +42,7 @@ public sealed class HeroBroadcastModule : ModuleBase {
         orig(self, go, ev, data, sendToChildren, excludeSelf);
         try {
             var name = ev?.Name;
+            RelayHudSlide(go, name);
             if (string.IsNullOrEmpty(name) || !HeroSwitch.HornetActive) return;
 
             var hero = HornetSpawner.Hornet;
@@ -30,8 +52,11 @@ public sealed class HeroBroadcastModule : ModuleBase {
             if (name == "ROAR ENTER") {
                 var source = FsmLookupModule.RoarObject;
                 if (!source) source = self.GameObject;
-                try { SetRoarFacingTarget(hero.gameObject, source); }
-                catch (Exception e) { LogError($"roar facing: {e.Message}"); }
+                try {
+                    SetRoarFacingTarget(hero.gameObject, source);
+                } catch (Exception e) {
+                    LogError($"roar facing: {e.Message}");
+                }
             }
 
             foreach (var fsm in hero.gameObject.GetComponents<SilksongPM::PlayMakerFSM>())
@@ -54,7 +79,7 @@ public sealed class HeroBroadcastModule : ModuleBase {
             var state = fsm.Fsm.GetState("Roar Lock Start");
             if (state == null) return;
             foreach (var action in state.Actions)
-                if (action is Silksong::HutongGames.PlayMaker.Actions.CheckTargetDirection ctd && ctd.target != null)
+                if (action is Silksong::HutongGames.PlayMaker.Actions.CheckTargetDirection { target: not null } ctd)
                     ctd.target.Value = boss;
             return;
         }
