@@ -5,6 +5,7 @@ namespace HornetInHallownest.Modules.Hero;
 
 internal sealed class KnightPresence : HeroPresence {
     private readonly HashSet<PlayMakerFSM> disabledByUs = [];
+    private readonly HashSet<Renderer> hiddenByUs = [];
 
     public override GameObject? Root =>
         HeroController.UnsafeInstance ? HeroController.UnsafeInstance.gameObject : null;
@@ -13,9 +14,13 @@ internal sealed class KnightPresence : HeroPresence {
 
     protected override void OnDeactivate(GameObject go) {
         PlayMakerFSM? vignetteFsm = null;
+        Transform? vignette = null;
+        Renderer? heroLight = null;
         if (go.TryGetComponent<HeroController>(out var hk)) {
             hk.enabled = false;
             vignetteFsm = hk.vignetteFSM;
+            vignette = hk.vignette ? hk.vignette.transform : null;
+            heroLight = hk.heroLight;
         }
 
         // Disable every FSM on the Knight (root + children): the ability FSMs (Superdash/Spell Control/Nail Arts) listen
@@ -28,6 +33,15 @@ internal sealed class KnightPresence : HeroPresence {
                 fsm.enabled = false;
                 disabledByUs.Add(fsm);
             }
+
+        // An effect playing at the switch freezes mid-animation (his animators are paused) and never hides itself, and he
+        // stands on Hornet, so hide his child renderers too (Monarch Wings stuck behind her). The vignette and his light
+        // stay: they light dark rooms for both heroes.
+        foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+            if (r.enabled && r.gameObject != go && r != heroLight && !(vignette && r.transform.IsChildOf(vignette))) {
+                r.enabled = false;
+                hiddenByUs.Add(r);
+            }
     }
 
     protected override void OnActivate(GameObject go) {
@@ -35,6 +49,11 @@ internal sealed class KnightPresence : HeroPresence {
             if (fsm)
                 fsm.enabled = true;
         disabledByUs.Clear();
+
+        foreach (var r in hiddenByUs)
+            if (r)
+                r.enabled = true;
+        hiddenByUs.Clear();
 
         if (go.TryGetComponent<HeroController>(out var hk)) {
             hk.enabled = true;
