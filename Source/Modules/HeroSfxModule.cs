@@ -119,8 +119,19 @@ public sealed class HeroSfxModule : ModuleBase {
         AddMixer(SAudio.DefaultUIAudioSourcePrefab);
         if (ssMixers.Count == 0) return false; // Silksong Audio settings not loaded yet
 
+        foreach (var mixer in ssMixers) RouteToHkSfx(mixer);
+
         ready = true;
         return true;
+    }
+
+    // Sources that play without passing Normalize (playOnAwake on activation) still end up in a Silksong mixer, so its root
+    // mixer outputs into HK's SFX group instead of straight to the listener.
+    private void RouteToHkSfx(AudioMixer mixer) {
+        var root = mixer;
+        while (root.outputAudioMixerGroup && root.outputAudioMixerGroup != hkSfxGroup)
+            root = root.outputAudioMixerGroup.audioMixer;
+        root.outputAudioMixerGroup = hkSfxGroup;
     }
 
     private void AddMixer(AudioSource? prefab) {
