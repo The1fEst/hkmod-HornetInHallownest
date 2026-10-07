@@ -1,6 +1,7 @@
 extern alias Silksong;
 extern alias SilksongPM;
 using System;
+using System.Collections.Generic;
 using HornetInHallownest.Util;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -41,5 +42,16 @@ internal static class HudRefresh {
     internal static void RefreshMaxSilkHud() {
         var spool = Silksong::SilkSpool.Instance;
         if (spool && spool.isActiveAndEnabled) spool.DrawSpool();
+    }
+
+    // ObjectPool.RecycleAll pulls the spool's chunks back into the pool. Silksong destroys the HUD along with it on quit,
+    // but this rig survives, so the spool would keep them listed and the pool would hand them out again as new chunks.
+    internal static void ForgetSilkChunks() {
+        var spool = Silksong::SilkSpool.Instance;
+        if (!spool) return;
+        spool.GetFieldValue<List<Silksong::SilkChunk>>("silkChunks")?.Clear();
+        spool.SetFieldValue("mossChunks", null);
+        spool.SetFieldValue("partsChunk", null);
+        spool.SetFieldValue("wasUsingChunk", null);
     }
 }
