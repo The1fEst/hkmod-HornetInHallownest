@@ -5,6 +5,7 @@ using System.Collections;
 using System.Linq;
 using HornetInHallownest.Bootstrap;
 using HornetInHallownest.Core;
+using HutongGames.PlayMaker.Actions;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using SFsm = SilksongPM::HutongGames.PlayMaker.Fsm;
@@ -50,6 +51,9 @@ public sealed class SceneFixesModule : ModuleBase {
                 break;
             case "Mines_31":
                 FixSuperDashGetFallGate();
+                break;
+            case "Ruins1_27":
+                FixHornetFountainLandGate();
                 break;
         }
     }
@@ -193,6 +197,28 @@ public sealed class SceneFixesModule : ModuleBase {
 
     private void FixSuperDashGetFallGate() =>
         RaiseHeroLandGate(GameObject.Find("Super Dash Get/Inspect Region"), "Inspect", "Knight Ground Y");
+
+    // City of Tears fountain Hornet cutscene: Take Control gates `Hero Y < 5.51` (LAND) with the target as a literal on
+    // the FloatCompare instead of an FSM variable.
+    private void FixHornetFountainLandGate() {
+        try {
+            var go = GameObject.Find("Hornet Fountain Encounter");
+            var fsm = go ? go.GetComponents<PlayMakerFSM>().FirstOrDefault(f => f.FsmName == "Control") : null;
+            var state = fsm ? fsm.FsmStates.FirstOrDefault(s => s.Name == "Take Control") : null;
+            if (state == null) return;
+
+            var delta = FeetDelta();
+            if (delta <= 0f) return;
+
+            foreach (var comparison in state.Actions.OfType<FloatCompare>()) {
+                var landY = comparison.float2.Value;
+                comparison.float2.Value = landY + delta;
+                LogDebug($"raised land Y {landY} -> {comparison.float2.Value} (+{delta} feet-delta) on {go!.name}");
+            }
+        } catch (Exception e) {
+            LogError(e.Message);
+        }
+    }
 
     // How much higher Hornet's origin rests on a floor than the Knight's, from the live colliders (collider bottom =
     // offset.y - size.y/2). Returns 0 if either collider is missing (fail-safe: no patch).
