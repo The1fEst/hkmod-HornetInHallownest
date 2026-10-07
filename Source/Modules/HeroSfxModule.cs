@@ -20,10 +20,13 @@ public sealed class HeroSfxModule : ModuleBase {
 
     public override void Initialize() {
         Detour(typeof(AudioSource), "PlayHelper", OnPlay, typeof(AudioSource), typeof(ulong));
-        Detour(typeof(AudioSource), "PlayOneShotHelper", OnPlayOneShot, typeof(AudioSource), typeof(AudioClip), typeof(float));
+        Detour(typeof(AudioSource), "PlayOneShotHelper", OnPlayOneShot, typeof(AudioSource), typeof(AudioClip),
+            typeof(float));
         // Some pool objects like double damage audio don't go through PlayActive but set playOnAwake.
         Detour(typeof(Silksong::ObjectPool), "Spawn", OnSpawn,
             typeof(GameObject), typeof(Transform), typeof(Vector3), typeof(Quaternion), typeof(bool));
+        // Hero child effects like the Magnetite Dice shield are instantiated in Awake, not pooled, and set playOnAwake.
+        Detour(typeof(Silksong::HeroController), "SpawnChildPrefab", OnSpawnChildPrefab, typeof(GameObject));
     }
 
     protected override void OnDeinitialize() {
@@ -39,6 +42,12 @@ public sealed class HeroSfxModule : ModuleBase {
         GameObject prefab, Transform parent, Vector3 position, Quaternion rotation, bool stealActiveSpawned) {
         ReroutePrefabAudio(prefab);
         return orig(prefab, parent, position, rotation, stealActiveSpawned);
+    }
+
+    private GameObject OnSpawnChildPrefab(Func<Silksong::HeroController, GameObject, GameObject> orig,
+        Silksong::HeroController self, GameObject prefab) {
+        ReroutePrefabAudio(prefab);
+        return orig(self, prefab);
     }
 
     private void ReroutePrefabAudio(GameObject? prefab) {
@@ -75,7 +84,8 @@ public sealed class HeroSfxModule : ModuleBase {
             var group = source.outputAudioMixerGroup;
             if (ReferenceEquals(group, null)) return; // unrouted (not a Silksong mixer source)
             if (!ssMixers.Contains(group.audioMixer)) return; // one of HK's mixers -> leave it alone
-            claimed.Add(source); }
+            claimed.Add(source);
+        }
 
         source.spatialBlend = 0f;
         source.outputAudioMixerGroup = hkSfxGroup;
@@ -99,9 +109,10 @@ public sealed class HeroSfxModule : ModuleBase {
         if (hero) {
             foreach (var src in hero.GetComponentsInChildren<AudioSource>(true)) {
                 var g = src != null ? src.outputAudioMixerGroup : null;
-                if (g && g.audioMixer) ssMixers.Add(g.audioMixer);
+                if (g && g.audioMixer && g != hkSfxGroup) ssMixers.Add(g.audioMixer);
             }
         }
+
         // on a fresh process the templates cover the mixers the hero does not reference (UI etc.)
         AddMixer(SAudio.DefaultAudioSourcePrefab);
         AddMixer(SAudio.Default2DAudioSourcePrefab);
