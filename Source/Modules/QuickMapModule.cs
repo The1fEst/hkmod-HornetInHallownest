@@ -111,9 +111,9 @@ public sealed class QuickMapModule : ModuleBase {
     private static IEnumerator SwitchToHkInventoryMap(SInventoryPaneList list) {
         var fsm = SilksongPM::PlayMakerFSM.FindFsmOnGameObject(list.gameObject, "Inventory Control");
         if (!fsm) yield break;
-        for (var i = 0; i < 120 && fsm.ActiveStateName != "Opened"; i++) yield return null;
+        yield return WaitForState(() => fsm.ActiveStateName, "Opened");
         fsm.SendEvent("CLOSE");
-        for (var i = 0; i < 300 && fsm.ActiveStateName != "Closed"; i++) yield return null;
+        yield return WaitForState(() => fsm.ActiveStateName, "Closed");
         var inventory = GameManager.instance.inventoryFSM;
         if (inventory) inventory.SendEvent("OPEN INVENTORY MAP");
     }
@@ -125,7 +125,7 @@ public sealed class QuickMapModule : ModuleBase {
             // the same check before it returns control to the hero.
             hkInventory.FsmVariables.FindFsmBool("Do Not Close").Value = false;
             hkInventory.SendEvent("CLOSE");
-            for (var i = 0; i < 300 && hkInventory.ActiveStateName != "Closed"; i++) yield return null;
+            yield return WaitForState(() => hkInventory.ActiveStateName, "Closed");
             if (hkInventory.ActiveStateName != "Closed") yield break;
 
             var list = typeof(SInventoryPaneList).GetFieldValue<SInventoryPaneList>("_instance");
@@ -142,6 +142,12 @@ public sealed class QuickMapModule : ModuleBase {
         } finally {
             leavingHkMap = false;
         }
+    }
+
+    // In real time: the inventories pause the game, and their close animations last a fixed time, not a frame count.
+    private static IEnumerator WaitForState(Func<string> activeState, string state, float timeoutSeconds = 3f) {
+        var deadline = Time.unscaledTime + timeoutSeconds;
+        while (activeState() != state && Time.unscaledTime < deadline) yield return null;
     }
 
     // Silksong requires a Pharloom map (HasAnyMap); mapAllRooms short-circuits that check to HK's hasMap.
