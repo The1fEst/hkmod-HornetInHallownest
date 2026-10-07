@@ -30,6 +30,7 @@
 - Fix the Shaman Crest bind halo staying on Hornet after the bind is interrupted by damage
 - Fix nail hits on enemies not spawning the Reaper Crest's silk orbs, healing Hornet in the Beast Crest's rage or
   filling the evolved Hunter Crest's combo
+- Fix Wanderer Crest critical hits on enemies dealing normal damage without their effect and sound
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings

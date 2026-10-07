@@ -130,6 +130,7 @@ internal sealed class HkEnemyHitBridge : SHealthManager {
         var attackType = isUnhandledAttackType ? AttackTypes.Generic : (AttackTypes)si.AttackType;
         // Allow e.g. silkspear to pierce enemies with a shield
         if ((si.SpecialType & SSpecialTypes.Piercer) != 0) attackType = AttackTypes.Spell;
+        if (si.CriticalHit) ApplyCrit(ref si);
 
         var hkHit = new HitInstance {
             Source = si.Source,
@@ -152,6 +153,17 @@ internal sealed class HkEnemyHitBridge : SHealthManager {
         }
 
         return SIHit.Response.DamageEnemy;
+    }
+
+    // A Wanderer Crest crit only rolls on the attack; Silksong's HealthManager.TakeDamage scales and shows it.
+    private void ApplyCrit(ref SHitInstance si) {
+        si.DamageDealt = Mathf.RoundToInt(si.DamageDealt * Silksong::GlobalSettings.Gameplay.WandererCritMultiplier);
+        si.MagnitudeMultiplier *= Silksong::GlobalSettings.Gameplay.WandererCritMagnitudeMult;
+        var effectPrefab = Silksong::GlobalSettings.Gameplay.WandererCritEffect;
+        if (!effectPrefab) return;
+        var effect = Silksong::ObjectPoolExtensions.Spawn(effectPrefab, transform.position);
+        Silksong::Extensions.SetRotation2D(effect.transform,
+            si.GetOverriddenDirection(transform, SHitInstance.TargetType.Regular));
     }
 
     // Silksong's HealthManager.TakeDamage, which the HK enemy replaces, also pays the hero back for a nail hit: crest
