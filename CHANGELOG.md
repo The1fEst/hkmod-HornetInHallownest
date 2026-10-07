@@ -5,6 +5,7 @@
 - Fix camera sticking to Hornet, jerking on ledges and not looking up/down
 - Fix masks and soul vessels picked up as Hornet not counting (missing silk spools)
 - Fix softlock when picking up the Crystal Heart as Hornet
+- Fix softlock in the City of Tears fountain cutscene with Hornet
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings
