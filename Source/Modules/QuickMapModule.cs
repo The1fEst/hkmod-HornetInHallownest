@@ -30,7 +30,9 @@ public sealed class QuickMapModule : ModuleBase {
 
     private const int MapPaneIndex = (int)SInventoryPaneList.PaneTypes.Map;
 
-    private bool leavingHkMap;
+    // Set from the first pane move of a switch between the two inventories until the target one has opened. Pane moves in
+    // between are swallowed: a second switch started mid-way leaves both inventories open.
+    private bool switchingInventories;
 
     public override string Id => "quick-map";
 
@@ -54,18 +56,21 @@ public sealed class QuickMapModule : ModuleBase {
 
     private SInventoryPane OnSetNextPane(Func<SInventoryPaneList, int, SInventoryPane, SInventoryPane> orig,
         SInventoryPaneList self, int direction, SInventoryPane currentPane) {
-        if (!HeroSwitch.HornetActive || !PlayerData.instance.hasMap ||
-            StepToPane(self, self.GetPaneIndex(currentPane), direction) != MapPaneIndex)
+        if (!HeroSwitch.HornetActive) return orig(self, direction, currentPane);
+        if (switchingInventories) return currentPane; // the FSM cancels a move onto the same pane
+        if (!PlayerData.instance.hasMap || StepToPane(self, self.GetPaneIndex(currentPane), direction) != MapPaneIndex)
             return orig(self, direction, currentPane);
 
         StartCoroutine(SwitchToHkInventoryMap(self));
-        return currentPane; // the FSM cancels a move onto the same pane
+        return currentPane;
     }
 
     // Direct moves, e.g. selecting the map's pane icon. Without a current pane the inventory is opening, never onto the map.
     private SInventoryPane OnSetCurrentPane(Func<SInventoryPaneList, int, SInventoryPane?, SInventoryPane> orig,
         SInventoryPaneList self, int index, SInventoryPane? currentPane) {
-        if (!HeroSwitch.HornetActive || index != MapPaneIndex || !currentPane) return orig(self, index, currentPane);
+        if (!HeroSwitch.HornetActive || !currentPane) return orig(self, index, currentPane);
+        if (switchingInventories) return currentPane;
+        if (index != MapPaneIndex) return orig(self, index, currentPane);
 
         StartCoroutine(SwitchToHkInventoryMap(self));
         return currentPane;
@@ -79,15 +84,18 @@ public sealed class QuickMapModule : ModuleBase {
         if (!TryLeaveHkMap(self.Fsm, 1)) orig(self);
     }
 
+    // True when the press is consumed: it leaves HK's map for Hornet's inventory, or a switch is already under way.
     private bool TryLeaveHkMap(Fsm fsm, int direction) {
-        if (!HeroSwitch.HornetActive || leavingHkMap || GameManager.instance.isPaused) return false;
+        if (!HeroSwitch.HornetActive || GameManager.instance.isPaused) return false;
         var inventory = GameManager.instance.inventoryFSM;
         if (!inventory || fsm != inventory.Fsm) return false;
         var actions = InputHandler.Instance.inputActions;
         if (!(direction < 0 ? actions.paneLeft : actions.paneRight).WasPressed) return false;
+        if (switchingInventories) return true;
         var currentPane = inventory.FsmVariables.FindFsmGameObject("Current Pane");
         var mapPane = inventory.FsmVariables.FindFsmGameObject("Map Pane");
-        if (currentPane == null || mapPane == null || !currentPane.Value || currentPane.Value != mapPane.Value)
+        if (inventory.ActiveStateName != "Opened" || currentPane == null || mapPane == null || !currentPane.Value ||
+            currentPane.Value != mapPane.Value)
             return false;
 
         StartCoroutine(SwitchToHornetInventory(inventory, direction));
@@ -108,18 +116,25 @@ public sealed class QuickMapModule : ModuleBase {
         return -1;
     }
 
-    private static IEnumerator SwitchToHkInventoryMap(SInventoryPaneList list) {
-        var fsm = SilksongPM::PlayMakerFSM.FindFsmOnGameObject(list.gameObject, "Inventory Control");
-        if (!fsm) yield break;
-        yield return WaitForState(() => fsm.ActiveStateName, "Opened");
-        fsm.SendEvent("CLOSE");
-        yield return WaitForState(() => fsm.ActiveStateName, "Closed");
-        var inventory = GameManager.instance.inventoryFSM;
-        if (inventory) inventory.SendEvent("OPEN INVENTORY MAP");
+    private IEnumerator SwitchToHkInventoryMap(SInventoryPaneList list) {
+        switchingInventories = true;
+        try {
+            var fsm = SilksongPM::PlayMakerFSM.FindFsmOnGameObject(list.gameObject, "Inventory Control");
+            if (!fsm) yield break;
+            yield return WaitForState(() => fsm.ActiveStateName, "Opened");
+            fsm.SendEvent("CLOSE");
+            yield return WaitForState(() => fsm.ActiveStateName, "Closed");
+            var inventory = GameManager.instance.inventoryFSM;
+            if (!inventory) yield break;
+            inventory.SendEvent("OPEN INVENTORY MAP");
+            yield return WaitForState(() => inventory.ActiveStateName, "Opened");
+        } finally {
+            switchingInventories = false;
+        }
     }
 
     private IEnumerator SwitchToHornetInventory(PlayMakerFSM hkInventory, int direction) {
-        leavingHkMap = true;
+        switchingInventories = true;
         try {
             // On the map HK's inventory holds "Do Not Close": CLOSE is refused, and the forced INVENTORY CANCEL stalls on
             // the same check before it returns control to the hero.
@@ -139,8 +154,9 @@ public sealed class QuickMapModule : ModuleBase {
             if (!fsm) yield break;
             fsm.FsmVariables.FindFsmEnum("Button Shortcut").Value = SInventoryShortcutButtons.Inventory;
             fsm.SendEvent("BUTTON PRESSED");
+            yield return WaitForState(() => fsm.ActiveStateName, "Opened");
         } finally {
-            leavingHkMap = false;
+            switchingInventories = false;
         }
     }
 
