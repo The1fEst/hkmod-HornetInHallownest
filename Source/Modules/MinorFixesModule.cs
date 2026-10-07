@@ -24,11 +24,13 @@ public sealed class MinorFixesModule : ModuleBase {
         Detour(typeof(MonoBehaviour), "StartCoroutine", OnStartCoroutine, typeof(IEnumerator));
         Detour(typeof(Silksong::GameManager), "FreezeMoment", OnFreezeMoment, typeof(SFreeze), typeof(Action));
         Detour(typeof(Silksong::HeroController), "RelinquishControl", OnRelinquishControl);
-        Detour(typeof(Silksong::HeroController),nameof(Silksong::HeroController.PreventCastByDialogueEnd), OnPreventCastByDialogueEnd);
+        Detour(typeof(Silksong::HeroController), nameof(Silksong::HeroController.PreventCastByDialogueEnd),
+            OnPreventCastByDialogueEnd);
+        Detour(typeof(IgnoreHeroCollision), "Ignore", OnIgnoreHeroCollision);
     }
 
     #region Sprint + cutscene RelinquishControl
-    
+
     // RelinquishControl does nothing if control is already relinquished (e.g. during dash), so ResetMotion never ran
     // for the abyss exit cutscene -> camera follows Hornet into nirvana.
     private static void OnRelinquishControl(Action<Silksong::HeroController> orig, Silksong::HeroController self) {
@@ -36,7 +38,7 @@ public sealed class MinorFixesModule : ModuleBase {
             self.acceptingInput = true;
         orig(self);
     }
-    
+
     #endregion
 
     private Coroutine OnStartCoroutine(Func<MonoBehaviour, IEnumerator, Coroutine> orig, MonoBehaviour self,
@@ -52,8 +54,15 @@ public sealed class MinorFixesModule : ModuleBase {
         onFinish?.Invoke();
     }
 
-    private static void OnPreventCastByDialogueEnd(Action<Silksong::HeroController> orig, Silksong::HeroController self) {
+    private static void
+        OnPreventCastByDialogueEnd(Action<Silksong::HeroController> orig, Silksong::HeroController self) {
         // Silksong never calls the method, and never decrements the resulting timer, leading to cast/taunt being broken
         // after HK calls this on dialogue close.
+    }
+
+    // IgnoreHeroCollision unsubscribes from the Knight's heroInPosition only after Ignore succeeds. A handler left over
+    // from a destroyed object throws inside HeroController.EnterScene, which aborts the scene entry on a black screen.
+    private static void OnIgnoreHeroCollision(Action<IgnoreHeroCollision> orig, IgnoreHeroCollision self) {
+        if (self) orig(self);
     }
 }
