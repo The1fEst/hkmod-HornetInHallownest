@@ -20,11 +20,13 @@ public sealed class FsmMethodCallRemapModule : ModuleBase {
     };
 
     #region Replacement methods
+
     private static readonly MethodInfo? spaChargeStandIn =
         typeof(FsmMethodCallRemapModule).GetMethod(nameof(SpaChargeSilk), BindingFlags.NonPublic | BindingFlags.Static);
+
     private static readonly MethodInfo? noOpStandIn =
         typeof(FsmMethodCallRemapModule).GetMethod(nameof(HkOnlyNoOp), BindingFlags.NonPublic | BindingFlags.Static);
-    
+
     private static bool SpaChargeSilk() {
         if (HornetSpawner.Hornet is { } hero) hero.AddSilk(1, true);
         return true;
@@ -33,6 +35,7 @@ public sealed class FsmMethodCallRemapModule : ModuleBase {
     private static bool HkOnlyNoOp() {
         return false;
     }
+
     #endregion
 
     // HK-only MP methods called on Hornet -> the stand-in that runs instead. Hornet has no soul, so most no-op; the
@@ -48,11 +51,29 @@ public sealed class FsmMethodCallRemapModule : ModuleBase {
         { "AddMPChargeSpa", spaChargeStandIn }
     };
 
+    // Mask and soul vessel pickups `SendMessage` their max-up to "Hero", i.e. Hornet, whose HeroController has no
+    // AddToMaxMPReserve and whose AddToMaxHealth writes only her PD. PlayerDataSyncModule mirrors HK PD onto hers, so the
+    // upgrade has to land on the Knight as well.
+    private static readonly Dictionary<string, Action<HeroController, int>> knightUpgrades = new() {
+        { "AddToMaxHealth", (knight, amount) => knight.AddToMaxHealth(amount) },
+        { "AddToMaxMPReserve", (knight, amount) => knight.AddToMaxMPReserve(amount) }
+    };
+
     public override string Id => "fsm-method-remap";
 
     public override void Initialize() {
         Detour(typeof(CallMethodProper), "DoCache", DoCacheHook);
         Detour(typeof(CallMethodProper), "DoMethodCall", DoMethodCallHook);
+        Detour(typeof(SendMessage), "DoSendMessage", DoSendMessageHook);
+    }
+
+    private static void DoSendMessageHook(Action<SendMessage> orig, SendMessage self) {
+        orig(self);
+        var hornet = HornetSpawner.HornetRoot;
+        var knight = HeroController.UnsafeInstance;
+        if (!hornet || !knight || self.Fsm.GetOwnerDefaultTarget(self.gameObject) != hornet) return;
+        if (knightUpgrades.TryGetValue(self.functionCall.FunctionName, out var deliver))
+            deliver(knight, self.functionCall.IntParameter.Value);
     }
 
     // CallMethodProper caches the resolved behaviour instance on the first call and invokes on it forever, after we
