@@ -1,6 +1,7 @@
 extern alias Silksong;
 extern alias SilksongPM;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using HornetInHallownest.Util;
 using UnityEngine;
@@ -52,6 +53,18 @@ internal static class HudRefresh {
         frame.SetFieldValue("currentFrameCrest", null);
         frame.SetFieldValue("currentFrameAnims", null);
         frame.AlreadyAppeared();
+    }
+
+    // Hiding and showing this HUD in one frame strips each TransformLayout of its child listeners: OnDisable queues their
+    // Destroy, OnEnable finds them still alive and keeps them, and they're gone by the next frame. The tool icons then
+    // don't re-space when a crest change shows more of them, and pile up in one slot.
+    internal static IEnumerator RelistenLayouts(Transform root) {
+        yield return null;
+        if (!root) yield break;
+        foreach (var layout in root.GetComponentsInChildren<Silksong::TransformLayout>()) {
+            layout.InvokeMethod("UpdateListeners");
+            layout.UpdatePositions();
+        }
     }
 
     // ObjectPool.RecycleAll pulls the spool's chunks back into the pool. Silksong destroys the HUD along with it on quit,
