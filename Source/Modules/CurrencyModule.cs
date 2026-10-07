@@ -30,6 +30,20 @@ public sealed class CurrencyModule : ModuleBase {
         Detour(typeof(Silksong::HeroController), "AddGeo",
             (System.Action<System.Action<Silksong::HeroController, int>, Silksong::HeroController, int>)
             ((_, _, amount) => PlayerData.instance.AddGeo(amount)), typeof(int));
+        // Silksong's own payouts (e.g. a broken death cocoon) write its Money straight into Silksong's geo.
+        Detour(typeof(Silksong::CurrencyManager), "ChangeCurrency", OnChangeCurrency, typeof(int),
+            typeof(SCurrencyType), typeof(bool));
+    }
+
+    private static void OnChangeCurrency(System.Action<int, SCurrencyType, bool> orig, int amount, SCurrencyType type,
+        bool showCounter) {
+        if (type != SCurrencyType.Money) {
+            orig(amount, type, showCounter);
+            return;
+        }
+
+        if (amount > 0) PlayerData.instance.AddGeo(amount);
+        else if (amount < 0) PlayerData.instance.TakeGeo(-amount);
     }
 
     protected override void OnDeinitialize() {
@@ -74,7 +88,7 @@ public sealed class CurrencyModule : ModuleBase {
 
     private static int OnSetInt(string name, int value) {
         if (name != "geo") return value;
-        
+
         var ss = SPlayerData.instance;
         var delta = value - ss.geo;
         ss.geo = value;
