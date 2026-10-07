@@ -10,6 +10,7 @@
 - Play Hornet's own wake-up animation when arriving in a dream, instead of her walking around invisible
 - Fix Hornet's silk spool showing empty or frozen chunks after loading a save or switching heroes
 - Fix bounce shrooms not bouncing Hornet when she lands on them
+- Fix Hornet's side and up slashes passing through bounce shrooms instead of knocking her back
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings
