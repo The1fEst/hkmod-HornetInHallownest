@@ -37,7 +37,8 @@ public sealed class SceneTransitionModule : ModuleBase {
     private bool arrivalInvulnerable; // block hazard damage through the dream-arrival window (park + placement settle)
     private bool dreamPending;
     private bool playingDreamArrival;
-    private bool statueReturn;
+    private bool lieDownArrival;
+    private bool fromMaskBreak;
 
     private string? dreamGate;
 
@@ -208,6 +209,7 @@ public sealed class SceneTransitionModule : ModuleBase {
 
         var knight = HeroController.UnsafeInstance;
         CompleteStuckHkVerticalEntry(knight);
+        HoldDuringMaskBreak();
         if (!pendingSnap || !knight || !knight.isHeroInPosition) return;
 
         if (HeroSwitch.HornetActive && (dreamGateEntryPending || (dreamArrivalPending && !dreamReturnPending))) {
@@ -218,9 +220,10 @@ public sealed class SceneTransitionModule : ModuleBase {
             var hornet = HornetSpawner.Hornet;
             if (hornet) {
                 // A death in Godhome returns through "door_dreamReturn", which EnterHero swaps for the statue door.
-                statueReturn = knight.GetEntryGateName().StartsWith("door_dreamReturnGG", StringComparison.Ordinal);
+                lieDownArrival = fromMaskBreak ||
+                                 knight.GetEntryGateName().StartsWith("door_dreamReturnGG", StringComparison.Ordinal);
                 hornet.EnterSceneDreamGate();
-                StartCoroutine(statueReturn ? PlayStatueReturn(hornet) : PlayDreamArrival(hornet));
+                StartCoroutine(lieDownArrival ? PlayLieDownArrival(hornet) : PlayDreamArrival(hornet));
             }
 
             dreamHeroPlaced = true;
@@ -241,6 +244,15 @@ public sealed class SceneTransitionModule : ModuleBase {
         dreamArrivalPending = false;
     }
 
+    // The dreamer mask-break cutscene keeps the Knight without input until it transitions back out. Hornet's entry and
+    // arrival hand her control on the way in, so hold her every frame instead.
+    private static void HoldDuringMaskBreak() {
+        var hornet = HornetSpawner.Hornet;
+        if (!HeroSwitch.HornetActive || !hornet ||
+            hornet is { controlReqlinquished: true, acceptingInput: false }) return;
+        if (USceneManager.GetActiveScene().name == "Cutscene_Boss_Door") hornet.RelinquishControl();
+    }
+
     // Arm the entry on a scene change (from = scene we're leaving). The definitive walk-in runs from Tick; the
     // entrance park runs in OnLevelActivated, after HK placed the Knight.
     private void ArmEntry(Scene from) {
@@ -248,6 +260,7 @@ public sealed class SceneTransitionModule : ModuleBase {
         // from.name is null when the previous scene was already unloaded (single-mode load, e.g. quit-to-menu); it's
         // only a real dream exit when the departed scene is still loaded and named. Null -> not a dream.
         dreamReturnPending = from.name?.StartsWith("Dream", StringComparison.Ordinal) ?? false;
+        fromMaskBreak = from.name == "Cutscene_Boss_Door";
         hkEntryFixed = false;
         cameraCaughtUp = false;
         // Leaving a dream scene leaves a white blanker faded in that HK's Knight-only Dream Return FSM would fade out.
@@ -426,7 +439,7 @@ public sealed class SceneTransitionModule : ModuleBase {
         // arrival (e.g. the White Palace half-Kingsoul dream) HK's Knight arrival FSM sends it; Hornet has none, so a
         // no-op here left a permanent whitescreen. Send it ourselves (same call the dream-return path uses). Harmless
         // no-op if the blanker isn't faded in (Idle/Faded Out ignore FADE OUT).
-        if (!statueReturn) FadeBlankerOut("Blanker White");
+        if (!lieDownArrival) FadeBlankerOut("Blanker White");
         LogDebug("closed enterWithoutInput entry (RegainControl+AcceptInput+FADE OUT white; no HK arrival FSM here)");
     }
 
@@ -525,11 +538,12 @@ public sealed class SceneTransitionModule : ModuleBase {
         }
     }
 
-    // Back at a Hall of Gods statue, HK's Knight-only Dream Return FSM lays the Knight down and gets him up on the first
-    // input, broadcasting DREAM WAKE: the statue door waits for it to finish its transition. Do the same with Hornet. The
-    // blankers fade out on the Knight's beat, once the door's own transition already covers the screen. She's laid back
-    // down every frame: after a death, DeathModule's revive hands her control and the idle clip right after this starts.
-    private IEnumerator PlayStatueReturn(Silksong::HeroController hero) {
+    // Back at a Hall of Gods statue or from a dreamer's mask-break cutscene, HK's Knight-only Dream Return FSM lays the
+    // Knight down and gets him up on the first input, broadcasting DREAM WAKE: the statue door waits for it to finish its
+    // transition. Do the same with Hornet. The blankers fade out on the Knight's beat, once the door's own transition
+    // already covers the screen. She's laid back down every frame: after a death, DeathModule's revive hands her control
+    // and the idle clip right after this starts.
+    private IEnumerator PlayLieDownArrival(Silksong::HeroController hero) {
         playingDreamArrival = true;
         try {
             var start = Time.time;
@@ -538,7 +552,7 @@ public sealed class SceneTransitionModule : ModuleBase {
             while (Time.time < start + 1f || !(input.up.WasPressed || input.down.WasPressed || input.left.WasPressed ||
                                                input.right.WasPressed || input.attack.WasPressed ||
                                                input.jump.WasPressed)) {
-                if (!hero.controlReqlinquished) hero.RelinquishControl();
+                if (!hero.controlReqlinquished || hero.acceptingInput) hero.RelinquishControl();
                 if (hero.AnimCtrl.animator.CurrentClip?.name != "Prostrate") {
                     hero.StopAnimationControl();
                     hero.AnimCtrl.PlayClipForced("Prostrate");
@@ -559,7 +573,7 @@ public sealed class SceneTransitionModule : ModuleBase {
             while (rise != null && hero.AnimCtrl.animator.IsPlaying(rise)) yield return null;
         } finally {
             playingDreamArrival = false;
-            statueReturn = false;
+            lieDownArrival = false;
             if (hero) {
                 hero.RegainControl();
                 hero.StartAnimationControl();
@@ -652,7 +666,7 @@ public sealed class SceneTransitionModule : ModuleBase {
 
     private IEnumerator FadeInAfterSettle() {
         yield return new WaitForSeconds(0.5f); // let the new scene's blanker FSMs (re)init before we send the event
-        if (!statueReturn) {
+        if (!lieDownArrival) {
             FadeBlankerOut("Blanker White");
             FadeBlankerOut("Blanker");
         }
