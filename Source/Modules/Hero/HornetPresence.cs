@@ -15,7 +15,7 @@ internal sealed class HornetPresence : HeroPresence {
     }
 
     protected override void OnActivate(GameObject go) {
-        // Her own vignette stays off - the Knight's camera-parented vignette darkens the scene for both heroes.
+        // Her own vignette stays off - the Knight's, kept on her, darkens the scene for both heroes.
         var v = go.transform.Find("Vignette");
         if (v) v.gameObject.SetActive(false);
 

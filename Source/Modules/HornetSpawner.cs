@@ -74,7 +74,7 @@ public sealed class HornetSpawner : ModuleBase {
 
         HornetSaveBridge.ApplyPending();
 
-        // Scene setup re-grabbed camera/vignette/HUD/"Hero" var to HK's Knight; re-point them at the active hero.
+        // Scene setup re-grabbed camera/HUD/"Hero" var to HK's Knight; re-point them at the active hero.
         HeroSwitch.ReassertEnvironment();
     }
 
@@ -118,6 +118,8 @@ public sealed class HornetSpawner : ModuleBase {
 
     // Instantiate the full prefab active so every component's Awake/Start runs against our prefixed Silksong.* types.
     // Unity swallows per-component Awake exceptions into Player.log (the "what's missing" list).
+    // Spawn and Despawn are also called, for their result, by the dev server routes on the debug branch.
+    // ReSharper disable once MemberCanBePrivate.Global, UnusedMethodReturnValue.Global
     internal static bool Spawn() {
         var prefab = HeroPrefab;
         if (!prefab) return false;
@@ -209,7 +211,9 @@ public sealed class HornetSpawner : ModuleBase {
     private const float ColliderWidth = 0.50f; // both games' hero terrain collider width (identical, so gaps match)
     private const float KnightHeight = 1.28f; // HK Knight terrain-collider height
     private const float HornetHeight = 2.08f; // Hornet's native Silksong terrain-collider height
-    private const float FeetBottomLocalY = -1.55f; // collider bottom in hero-local Y (her sprite feet); both anchor here
+
+    private const float
+        FeetBottomLocalY = -1.55f; // collider bottom in hero-local Y (her sprite feet); both anchor here
 
     // Hornet's terrain collider (col2d), cached at spawn. Single source of truth for her body height (read live so
     // hazard checks respect the current height instead of duplicating the magic number).
@@ -217,7 +221,7 @@ public sealed class HornetSpawner : ModuleBase {
 
     // Feet-anchored: keep the collider bottom at her feet (FeetBottomLocalY) and only change the height, so ground-snap
     // stays correct.
-    internal static void ApplyColliderHeight() {
+    private static void ApplyColliderHeight() {
         var root = HornetRoot;
         if (!root) return;
         TerrainCollider = root.GetComponent<BoxCollider2D>();
@@ -231,12 +235,15 @@ public sealed class HornetSpawner : ModuleBase {
         TerrainCollider.offset = new Vector2(0f, FeetBottomLocalY + height / 2f);
     }
 
+    // Bound to a debug key on the debug branch.
+    // ReSharper disable once UnusedMember.Global
     internal static bool ToggleColliderHeight() {
         KnightHeightCollider = !KnightHeightCollider;
         ApplyColliderHeight();
         return KnightHeightCollider;
     }
 
+    // ReSharper disable once MemberCanBePrivate.Global, UnusedMethodReturnValue.Global
     internal static bool Despawn() {
         if (!HornetRoot) return false;
         Object.DestroyImmediate(HornetRoot);

@@ -12,13 +12,19 @@ internal sealed class KnightPresence : HeroPresence {
     protected override Behaviour? AnimCtrl(GameObject go) => go.GetComponent<HeroAnimationController>();
 
     protected override void OnDeactivate(GameObject go) {
-        if (go.TryGetComponent<HeroController>(out var hk)) hk.enabled = false;
+        PlayMakerFSM? vignetteFsm = null;
+        if (go.TryGetComponent<HeroController>(out var hk)) {
+            hk.enabled = false;
+            vignetteFsm = hk.vignetteFSM;
+        }
+
         // Disable every FSM on the Knight (root + children): the ability FSMs (Superdash/Spell Control/Nail Arts) listen
         // for input independently of HeroController.enabled and would fire on shared input; the rest target the PlayMaker
         // "Hero" global (repointed to Hornet) and would act on her. Remember only what we actually disabled, so restore
-        // doesn't re-enable FSMs the game itself had off.
+        // doesn't re-enable FSMs the game itself had off. The vignette's Darkness Control stays on: HK's scene setup
+        // darkens dark rooms through it, for both heroes.
         foreach (var fsm in go.GetComponentsInChildren<PlayMakerFSM>(true))
-            if (fsm.enabled) {
+            if (fsm.enabled && fsm != vignetteFsm) {
                 fsm.enabled = false;
                 disabledByUs.Add(fsm);
             }

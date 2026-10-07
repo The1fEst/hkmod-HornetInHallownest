@@ -1,21 +1,24 @@
+extern alias Silksong;
 using System;
+using GlobalEnums;
 using HornetInHallownest.Core;
 using HornetInHallownest.Util;
 using HutongGames.PlayMaker;
+using UnityEngine;
 
 namespace HornetInHallownest.Modules;
 
 // Redirect HK's "where/who is the hero" to the active hero.
+//   - the inert Knight's position, kept on Hornet (enemy line of sight, the dark-room vignette and light on his children,
+//     Gathering Swarm geo and the map compass all read HeroController.instance's position)
 //   - PlayMaker global "Hero" var (most enemy/cutscene/UI FSMs)
-//   - LineOfSightDetector + the GetHero action
+//   - the GetHero action
 //   - SoulOrb (a plain MonoBehaviour reading HeroController.instance directly) + soul->silk conversion
 public sealed class HeroTargetModule : ModuleBase {
     public override string Id => "hero-target";
 
     public override void Initialize() {
-        // Enemy targeting: LoS reads HeroController.instance (positional), so place the inert Knight at Hornet's spot for
-        // the call, restore after. GetHero caches instance into a per-FSM local var, so rewrite its result.
-        Detour(typeof(LineOfSightDetector), "Update", OnLosUpdate);
+        // GetHero caches instance into a per-FSM local var, so rewrite its result.
         Detour(typeof(GetHero), "OnEnter", OnGetHero);
 
         // SoulOrb (pooled) homes to HeroController.instance: Start caches it once at pool warmup (before Hornet exists),
@@ -59,19 +62,19 @@ public sealed class HeroTargetModule : ModuleBase {
         if (target && heroVar.Value != target) heroVar.Value = target;
 
         // A hero-GO change leaves HK's cached local "Hero" vars pointing at the old GO; re-sync them.
-        if (target && target != lastHeroSwept) {
+        if (target && target != sweptHero) {
             SyncLocalHeroVars(target);
-            lastHeroSwept = target;
+            sweptHero = target;
         }
     }
 
-    private static UnityEngine.GameObject? lastHeroSwept;
+    private static GameObject? sweptHero;
 
     // Variables that get set to the hero game object.
     private static readonly string[] heroVarNames = ["Hero", "Hero Obj", "Hero Object"];
 
-    private static void SyncLocalHeroVars(UnityEngine.GameObject hero) {
-        foreach (var fsm in UnityEngine.Object.FindObjectsByType<PlayMakerFSM>(UnityEngine.FindObjectsSortMode.None)) {
+    private static void SyncLocalHeroVars(GameObject hero) {
+        foreach (var fsm in UnityEngine.Object.FindObjectsByType<PlayMakerFSM>(FindObjectsSortMode.None)) {
             var vars = fsm.FsmVariables;
             if (vars == null) continue;
             foreach (var name in heroVarNames) {
@@ -83,30 +86,30 @@ public sealed class HeroTargetModule : ModuleBase {
 
     #endregion
 
+    #region Knight position
+
+    // Runs before HK's scripts read the position this frame. Skipped while HK places the Knight itself (scene entry,
+    // respawn): the entry and revive code then move Hornet onto him.
+    public override void HornetActiveUpdate(Silksong::HeroController hero) {
+        var knight = HeroController.UnsafeInstance;
+        var gm = GameManager.UnsafeInstance;
+        if (HeroSwitch.BothActive || !knight || knight.enabled || !gm) return;
+        if (gm.gameState != GameState.PLAYING || gm.RespawningHero || hero.cState.dead) return;
+        if (knight.transitionState != HeroTransitionState.WAITING_TO_TRANSITION || !knight.isHeroInPosition) return;
+
+        var kt = knight.transform;
+        var position = hero.transform.position;
+        kt.position = new Vector3(position.x, position.y, kt.position.z);
+    }
+
+    #endregion
+
     #region Enemy targeting
 
     private void OnGetHero(Action<GetHero> orig, GetHero self) {
         orig(self); // sets storeResult to HeroController.instance (the Knight)
         if (self.storeResult != null && HeroSwitch.ActiveHeroGameObject is { } hero)
             self.storeResult.Value = hero;
-    }
-
-    private void OnLosUpdate(Action<LineOfSightDetector> orig, LineOfSightDetector self) {
-        var knight = HeroController.UnsafeInstance;
-        var hornet = HornetSpawner.Hornet;
-        if (!HeroSwitch.HornetActive || !knight || !hornet) {
-            orig(self);
-            return;
-        }
-
-        var kt = knight.transform;
-        var saved = kt.position;
-        kt.position = hornet.transform.position;
-        try {
-            orig(self);
-        } finally {
-            kt.position = saved;
-        }
     }
 
     #endregion
