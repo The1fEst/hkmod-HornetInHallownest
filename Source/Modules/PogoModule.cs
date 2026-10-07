@@ -19,6 +19,29 @@ public sealed class PogoModule : ModuleBase {
         Detour(typeof(Silksong::HeroDownAttack), "IsNonBounce", OnIsNonBounce, typeof(GameObject));
         Detour(typeof(Silksong::HeroDownAttack), "ContinueBounceTrigger", OnContinueBounce, typeof(GameObject));
         Detour(typeof(BounceShroom), "Start", OnShroomStart);
+        Detour(typeof(Silksong::DamageEnemies), "DoDamage", OnDoDamage, typeof(GameObject), typeof(bool));
+    }
+
+    // Side and up slashes into a shroom: HK's NailSlash knocks the Knight back off it and bounces the shroom. Down
+    // slashes are the pogo in OnContinueBounce.
+    private static bool OnDoDamage(Func<Silksong::DamageEnemies, GameObject, bool, bool> orig,
+        Silksong::DamageEnemies self, GameObject target, bool isFirstHit) {
+        var result = orig(self, target, isFirstHit);
+        var hero = HeroSwitch.HornetActive ? HornetSpawner.Hornet : null;
+        if (!hero || !target || !self.transform.IsChildOf(hero.transform)) return result;
+        var shroom = target.GetComponentInParent<BounceShroom>();
+        if (!shroom || !shroom.active) return result;
+
+        var direction = self.GetDirection();
+        if (Mathf.Abs(Mathf.DeltaAngle(direction, 0f)) <= 45f) hero.RecoilLeftLong();
+        else if (Mathf.Abs(Mathf.DeltaAngle(direction, 180f)) <= 45f) hero.RecoilRightLong();
+        else if (Mathf.Abs(Mathf.DeltaAngle(direction, 90f)) <= 45f) hero.RecoilDown();
+        else return result;
+
+        var shroomFsm = FSMUtility.LocateFSM(target, "Bounce Shroom");
+        if (shroomFsm) shroomFsm.SendEvent("BOUNCE UPWARD");
+        else shroom.BounceLarge(false);
+        return result;
     }
 
     // Landing on a shroom: BounceShroom's collision handler messages HeroController.instance, the inert Knight.
