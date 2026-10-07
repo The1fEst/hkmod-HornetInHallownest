@@ -36,6 +36,7 @@ public sealed class SceneTransitionModule : ModuleBase {
     private bool dreamHeroPlaced;
     private bool arrivalInvulnerable; // block hazard damage through the dream-arrival window (park + placement settle)
     private bool dreamPending;
+    private bool playingDreamArrival;
 
     private string? dreamGate;
 
@@ -194,7 +195,12 @@ public sealed class SceneTransitionModule : ModuleBase {
             // door walk-out), HK's dream mechanism. The arrival-layer coroutine held her non-colliding until now;
             // dreamHeroPlaced flips it to restore the Player layer so she collides with the platform and stays.
             SnapHornetToKnight(knight);
-            HornetSpawner.Hornet?.EnterSceneDreamGate();
+            var hornet = HornetSpawner.Hornet;
+            if (hornet) {
+                hornet.EnterSceneDreamGate();
+                StartCoroutine(PlayDreamArrival(hornet));
+            }
+
             dreamHeroPlaced = true;
         }
         else if (HeroSwitch.HornetActive && knight.sceneEntryGate) {
@@ -443,6 +449,51 @@ public sealed class SceneTransitionModule : ModuleBase {
         return go;
     }
 
+    // HK's "Dream Entry" FSM hides the hero and plays a Knight sprite ("Knight Dream Arrival") before handing control
+    // back, but Hornet's own EnterSceneDreamGate already accepts input, so she'd walk around unseen. Play Silksong's
+    // memory wake-up (Prostrate, then Prostrate Rise) on the same beats instead and hold her control until she's up.
+    private static readonly string[] dreamEntryFadeStates =
+        ["Start Fade", "Arrive Anim", "Wait for Anim", "Return Control"];
+
+    private static readonly string[] dreamEntryArriveStates = ["Arrive Anim", "Wait for Anim", "Return Control"];
+
+    private IEnumerator PlayDreamArrival(Silksong::HeroController hero) {
+        var entry = GameObject.Find("Dream Entry");
+        var fsm = entry ? Array.Find(entry.GetComponents<PlayMakerFSM>(), f => f.FsmName == "Control") : null;
+        var knightSprite = entry ? entry.transform.Find("Knight Dream Arrival") : null;
+        if (!fsm || !knightSprite) yield break;
+
+        var knightRenderers = knightSprite.GetComponentsInChildren<MeshRenderer>(true);
+        playingDreamArrival = true;
+        hero.RelinquishControl();
+        try {
+            var deadline = Time.unscaledTime + 10f;
+            while (Array.IndexOf(dreamEntryFadeStates, fsm.ActiveStateName) < 0 && Time.unscaledTime < deadline)
+                yield return null;
+
+            hero.StopAnimationControl();
+            hero.GetComponent<MeshRenderer>().enabled = true;
+            hero.AnimCtrl.PlayClipForced("Prostrate");
+            while (Array.IndexOf(dreamEntryArriveStates, fsm.ActiveStateName) < 0 && Time.unscaledTime < deadline)
+                yield return null;
+
+            hero.AnimCtrl.PlayClipForced("Prostrate Rise");
+            var rise = hero.AnimCtrl.animator.CurrentClip;
+            while (rise != null && hero.AnimCtrl.animator.IsPlaying(rise) && Time.unscaledTime < deadline) {
+                foreach (var knightRenderer in knightRenderers) knightRenderer.enabled = false;
+                yield return null;
+            }
+
+            foreach (var knightRenderer in knightRenderers) knightRenderer.enabled = false;
+        } finally {
+            playingDreamArrival = false;
+            if (hero) {
+                hero.RegainControl();
+                hero.StartAnimationControl();
+            }
+        }
+    }
+
     // Dream-return arrival: normal entry, then force the idle clip once grounded ("door_dreamReturn" is a door path with
     // no real door, leaving her animator on the warp clip; HK's Dream Return get-up would do this).
     private IEnumerator DreamReturnEntry(HeroController knight) {
@@ -543,7 +594,8 @@ public sealed class SceneTransitionModule : ModuleBase {
         // With a real gate, RunEntry (EnterScene -> FinishedEnteringScene) owns the control-return; doing it here mid-entry
         // breaks its no_input door walk (she gets input+gravity and falls out of the arena, non-deterministically).
         // Boss scene: control return is owned by its own Dream Entry FSM; only the blanker fade + DREAM WAKE run.
-        if (!entryInProgress && !BossSceneController.IsBossScene) {
+        // PlayDreamArrival returns control itself once she's up.
+        if (!entryInProgress && !playingDreamArrival && !BossSceneController.IsBossScene) {
             if (hero.transitionState == SHeroTransition.WAITING_TO_ENTER_LEVEL)
                 hero.transitionState = SHeroTransition.WAITING_TO_TRANSITION;
             hero.enterWithoutInput = false;
