@@ -32,10 +32,10 @@ public sealed class InputModule : ModuleBase {
 
     // Overridable actions. Null in config means use the HK equivalent binding.
     private static readonly Overridable[] overridable = [
-        new(s => s.MoveLeft, h => h.left, a => a.Left),
-        new(s => s.MoveRight, h => h.right, a => a.Right),
-        new(s => s.MoveUp, h => h.up, a => a.Up),
-        new(s => s.MoveDown, h => h.down, a => a.Down),
+        new(s => s.MoveLeft, h => h.left, a => a.Left, Axis: true),
+        new(s => s.MoveRight, h => h.right, a => a.Right, Axis: true),
+        new(s => s.MoveUp, h => h.up, a => a.Up, Axis: true),
+        new(s => s.MoveDown, h => h.down, a => a.Down, Axis: true),
         new(s => s.Jump, h => h.jump, a => a.Jump),
         new(s => s.Attack, h => h.attack, a => a.Attack),
         new(s => s.Dash, h => h.dash, a => a.Dash),
@@ -56,6 +56,11 @@ public sealed class InputModule : ModuleBase {
     private HornetInputActions? overrideSet;
     private PlayerAction?[] overrideActions = [];
     private HornetInputActions? menuButtons;
+
+    // Buttons still held when a menu closes stay released for Hornet until let go: the press that closes a menu (B
+    // cancels it) would otherwise land as gameplay input the same frame, e.g. her tap-to-bind.
+    private readonly bool[] heldOverMenu = new bool[overridable.Length];
+    private bool wasInMenu;
     private ulong tick;
 
     public override string Id => "input";
@@ -201,13 +206,20 @@ public sealed class InputModule : ModuleBase {
             inputActions.MenuSuper.CommitWithState(menuButtons.Slots[1].IsPressed, tick, dt);
         }
 
+        var hkGm = GameManager.instance;
+        var inMenu = (hkGm && hkGm.isPaused) || hkInventoryOpen || Silksong::PlayerData.instance.isInventoryOpen;
+        var leftMenu = wasInMenu && !inMenu;
+        wasInMenu = inMenu;
+
         for (var i = 0; i < overridable.Length; i++) {
             var def = overridable[i];
             var act = def.Ss(inputActions);
             var ov = overrideActions[i];
             var pressed = ov?.IsPressed ?? def.Hk != null && hk != null && def.Hk(hk).IsPressed;
             if (def.PrimaryOnly && (!primary || hkInventoryOpen)) pressed = false;
-            act.CommitWithState(pressed, tick, dt);
+            if (!pressed) heldOverMenu[i] = false;
+            else if (leftMenu && !def.Axis) heldOverMenu[i] = true;
+            act.CommitWithState(pressed && !heldOverMenu[i], tick, dt);
         }
 
         // ESC only reaches HK's InputHandler, manually route it to the inventory MenuCancel - but only for the primary
@@ -223,10 +235,9 @@ public sealed class InputModule : ModuleBase {
         SyncActiveController();
 
         // Silksong's listeners (e.g. ListenForCast, the bind) ignore input while its GameManager is paused, but the
-        // stand-in never pauses: the button that closes HK's pause menu also reached Hornet, e.g. B binding. Hornet's
-        // inventory pauses HK too (InventoryModule) but must keep Silksong's own menu listeners running.
+        // stand-in never pauses on its own, so mirror HK's pause menu. Hornet's inventory pauses HK too
+        // (InventoryModule) but must keep Silksong's own menu listeners running.
         var ssGm = Silksong::GameManager.instance;
-        var hkGm = GameManager.instance;
         if (ssGm && hkGm) ssGm.isPaused = hkGm.isPaused && !Silksong::PlayerData.instance.isInventoryOpen;
     }
 
@@ -273,5 +284,6 @@ public sealed class InputModule : ModuleBase {
         Func<SsActions, SsAction> Ss, // silksong action
         bool SnapshotKey = false, // snapshot HK binding as default (since hk is disabled while Hornet is primary)
         bool PrimaryOnly = false, // suppressed while Hornet is active but not primary
-        Func<InputSettings, string?>? ControllerSetting = null); // Silksong's controller default
+        Func<InputSettings, string?>? ControllerSetting = null, // Silksong's controller default
+        bool Axis = false); // movement: keeps working when held through a menu closing
 }
