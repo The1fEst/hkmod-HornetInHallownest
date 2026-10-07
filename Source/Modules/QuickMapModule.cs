@@ -57,22 +57,34 @@ public sealed class QuickMapModule : ModuleBase {
     private SInventoryPane OnSetNextPane(Func<SInventoryPaneList, int, SInventoryPane, SInventoryPane> orig,
         SInventoryPaneList self, int direction, SInventoryPane currentPane) {
         if (!HeroSwitch.HornetActive) return orig(self, direction, currentPane);
-        if (switchingInventories) return currentPane; // the FSM cancels a move onto the same pane
+        if (switchingInventories) return CancelPaneMove(self, currentPane);
         if (!PlayerData.instance.hasMap || StepToPane(self, self.GetPaneIndex(currentPane), direction) != MapPaneIndex)
             return orig(self, direction, currentPane);
 
         StartCoroutine(SwitchToHkInventoryMap(self));
-        return currentPane;
+        return CancelPaneMove(self, currentPane);
     }
 
     // Direct moves, e.g. selecting the map's pane icon. Without a current pane the inventory is opening, never onto the map.
     private SInventoryPane OnSetCurrentPane(Func<SInventoryPaneList, int, SInventoryPane?, SInventoryPane> orig,
         SInventoryPaneList self, int index, SInventoryPane? currentPane) {
         if (!HeroSwitch.HornetActive || !currentPane) return orig(self, index, currentPane);
-        if (switchingInventories) return currentPane;
+        if (switchingInventories) return CancelPaneMove(self, currentPane);
         if (index != MapPaneIndex) return orig(self, index, currentPane);
 
         StartCoroutine(SwitchToHkInventoryMap(self));
+        return CancelPaneMove(self, currentPane);
+    }
+
+    // Returning the current pane makes the FSM cancel the move. A move queued during a pane tween ("Queued Move L/R") is
+    // only cleared by the next tween, which a cancelled move never reaches: "Opened" would replay it every frame.
+    private static SInventoryPane CancelPaneMove(SInventoryPaneList list, SInventoryPane currentPane) {
+        var fsm = SilksongPM::PlayMakerFSM.FindFsmOnGameObject(list.gameObject, "Inventory Control");
+        if (fsm) {
+            fsm.FsmVariables.FindFsmBool("Queued Move L").Value = false;
+            fsm.FsmVariables.FindFsmBool("Queued Move R").Value = false;
+        }
+
         return currentPane;
     }
 
@@ -121,11 +133,9 @@ public sealed class QuickMapModule : ModuleBase {
         try {
             var fsm = SilksongPM::PlayMakerFSM.FindFsmOnGameObject(list.gameObject, "Inventory Control");
             if (!fsm) yield break;
-            yield return WaitForState(() => fsm.ActiveStateName, "Opened");
-            fsm.SendEvent("CLOSE");
-            yield return WaitForState(() => fsm.ActiveStateName, "Closed");
+            yield return CloseInventory(() => fsm.ActiveStateName, () => fsm.SendEvent("CLOSE"));
             var inventory = GameManager.instance.inventoryFSM;
-            if (!inventory) yield break;
+            if (fsm.ActiveStateName != "Closed" || !inventory) yield break;
             inventory.SendEvent("OPEN INVENTORY MAP");
             yield return WaitForState(() => inventory.ActiveStateName, "Opened");
         } finally {
@@ -138,9 +148,10 @@ public sealed class QuickMapModule : ModuleBase {
         try {
             // On the map HK's inventory holds "Do Not Close": CLOSE is refused, and the forced INVENTORY CANCEL stalls on
             // the same check before it returns control to the hero.
-            hkInventory.FsmVariables.FindFsmBool("Do Not Close").Value = false;
-            hkInventory.SendEvent("CLOSE");
-            yield return WaitForState(() => hkInventory.ActiveStateName, "Closed");
+            yield return CloseInventory(() => hkInventory.ActiveStateName, () => {
+                hkInventory.FsmVariables.FindFsmBool("Do Not Close").Value = false;
+                hkInventory.SendEvent("CLOSE");
+            });
             if (hkInventory.ActiveStateName != "Closed") yield break;
 
             var list = typeof(SInventoryPaneList).GetFieldValue<SInventoryPaneList>("_instance");
@@ -157,6 +168,16 @@ public sealed class QuickMapModule : ModuleBase {
             yield return WaitForState(() => fsm.ActiveStateName, "Opened");
         } finally {
             switchingInventories = false;
+        }
+    }
+
+    // A pane move pressed meanwhile takes the FSM out of "Opened", and a CLOSE arriving in any other state is dropped, so
+    // close again whenever it's back in "Opened".
+    private static IEnumerator CloseInventory(Func<string> activeState, Action close, float timeoutSeconds = 3f) {
+        var deadline = Time.unscaledTime + timeoutSeconds;
+        while (activeState() != "Closed" && Time.unscaledTime < deadline) {
+            if (activeState() == "Opened") close();
+            yield return null;
         }
     }
 
