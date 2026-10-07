@@ -12,6 +12,7 @@ using SHitInstance = Silksong::HitInstance;
 using SHealthManager = Silksong::HealthManager;
 using STinkEffect = Silksong::TinkEffect;
 using SSpecialTypes = Silksong::SpecialTypes;
+using SAttackTypes = Silksong::AttackTypes;
 
 namespace HornetInHallownest.Modules;
 
@@ -142,6 +143,7 @@ internal sealed class HkEnemyHitBridge : SHealthManager {
             IgnoreInvulnerable = true, // prevent iframes
         };
         Responder.Hit(hkHit);
+        RewardHero(si);
 
         if (si.Source && !(nonBouncer && nonBouncer.active)) {
             Silksong::FSMUtility.SendEventToGameObject(si.Source, "HIT LANDED");
@@ -150,6 +152,43 @@ internal sealed class HkEnemyHitBridge : SHealthManager {
         }
 
         return SIHit.Response.DamageEnemy;
+    }
+
+    // Silksong's HealthManager.TakeDamage, which the HK enemy replaces, also pays the hero back for a nail hit: crest
+    // effects through NailHitEnemy (Beast heal, evolved Hunter meter) and the Reaper's silk orbs.
+    private void RewardHero(SHitInstance si) {
+        var hero = Silksong::HeroController.instance;
+        var isNailHit = si.AttackType is SAttackTypes.Nail or SAttackTypes.NailBeam ||
+                        (si.AttackType == SAttackTypes.Heavy && si.Source &&
+                         Silksong::DamageEnemies.IsNailAttackObject(si.Source));
+        if (!hero || !isNailHit) return;
+        hero.NailHitEnemy(this, si);
+
+        var reaps = si is { AttackType: SAttackTypes.Nail } or { AttackType: SAttackTypes.Heavy, IsNailTag: true } &&
+                    si.SilkGeneration != Silksong::HitSilkGeneration.None &&
+                    Silksong::PlayerData.instance.CurrentCrestID == "Reaper" && hero.ReaperState.IsInReaperMode;
+        if (!reaps) return;
+
+        var direction = Silksong::DirectionUtils.GetCardinalDirection(
+            si.GetActualDirection(transform, SHitInstance.TargetType.Regular));
+        var degrees = direction * 90f;
+        var payout = hero.GetReaperPayout();
+        Silksong::FlingUtils.SpawnAndFling(new Silksong::FlingUtils.Config {
+            Prefab = Silksong::GlobalSettings.Gameplay.ReaperBundlePrefab,
+            AmountMin = payout,
+            AmountMax = payout,
+            SpeedMin = 25f,
+            SpeedMax = 50f,
+            AngleMin = degrees - 45f,
+            AngleMax = degrees + 45f
+        }, transform, Vector3.zero);
+
+        var effectPrefab = Silksong::GlobalSettings.Effects.ReapHitEffectPrefab;
+        if (!effectPrefab) return;
+        var effect = Silksong::ObjectPoolExtensions.Spawn(effectPrefab, transform.position);
+        Silksong::Extensions.SetRotation2D(effect.transform, direction % 2 == 1 ? 90f : 0f);
+        effect.transform.localScale = new Vector3(direction == 2 ? -1f : 1f, direction == 3 ? -1f : 1f,
+            effect.transform.localScale.z);
     }
 }
 
