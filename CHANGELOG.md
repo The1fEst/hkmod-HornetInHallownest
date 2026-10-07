@@ -13,6 +13,7 @@
 - Allow opening the inventory map as Hornet by double-tapping quick map, like the Knight
 - Allow reaching the map from Hornet's inventory by paging past the last pane, and paging back from it
 - Show the map pane icon in Hornet's inventory once the Knight has a map
+- Fix the controller's X/Y menu buttons (e.g. changing crest) doing nothing in Hornet's inventory
 
 ## v0.3.0
 

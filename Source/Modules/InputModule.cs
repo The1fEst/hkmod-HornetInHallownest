@@ -51,6 +51,7 @@ public sealed class InputModule : ModuleBase {
 
     private HornetInputActions? overrideSet;
     private PlayerAction?[] overrideActions = [];
+    private HornetInputActions? menuButtons;
     private ulong tick;
 
     public override string Id => "input";
@@ -61,6 +62,12 @@ public sealed class InputModule : ModuleBase {
 
     public override void Initialize() {
         BuildOverrides();
+
+        // HK has no menu Extra/Super actions. Silksong's menus read them on the controller only (keyboard uses dash and
+        // dream nail), e.g. Super to change crest; bind them to Silksong's defaults.
+        menuButtons = new HornetInputActions(2);
+        menuButtons.Slots[0].AddBinding(new DeviceBindingSource(InputControlType.Action3));
+        menuButtons.Slots[1].AddBinding(new DeviceBindingSource(InputControlType.Action4));
 
         // Rebuild when HK's bindings change.
         Detour(typeof(InputHandler), nameof(InputHandler.MapControllerButtons), OnMapControllerButtons);
@@ -122,6 +129,8 @@ public sealed class InputModule : ModuleBase {
         overrideSet?.Destroy();
         overrideSet = null;
         overrideActions = [];
+        menuButtons?.Destroy();
+        menuButtons = null;
     }
 
     public override void HornetActiveUpdate(Silksong::HeroController hero) {
@@ -140,6 +149,11 @@ public sealed class InputModule : ModuleBase {
         foreach (var (hkGet, ssGet) in mirror) {
             var act = ssGet(inputActions);
             act.CommitWithState((hk != null && hkGet(hk).IsPressed), tick, dt);
+        }
+
+        if (menuButtons != null) {
+            inputActions.MenuExtra.CommitWithState(menuButtons.Slots[0].IsPressed, tick, dt);
+            inputActions.MenuSuper.CommitWithState(menuButtons.Slots[1].IsPressed, tick, dt);
         }
 
         for (var i = 0; i < overridable.Length; i++) {
