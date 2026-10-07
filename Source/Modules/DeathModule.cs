@@ -9,6 +9,7 @@ using SHeroController = Silksong::HeroController;
 using SHeroBox = Silksong::HeroBox;
 using SGameManager = Silksong::GameManager;
 using SActorStates = Silksong::GlobalEnums.ActorStates;
+using SHazardType = Silksong::GlobalEnums.HazardType;
 
 namespace HornetInHallownest.Modules;
 
@@ -32,6 +33,10 @@ public sealed class DeathModule : ModuleBase {
         Detour(typeof(SHeroController), "SetBenchRespawn", OnSetBenchRespawn,
             typeof(string), typeof(string), typeof(int), typeof(bool));
         Detour(typeof(SHeroController), "SetHazardRespawn", OnSetHazardRespawn, typeof(Vector3), typeof(bool));
+
+        // HK's spike death prefab broadcasts KNIGHT SPIKE HIT, which raises e.g. the Colosseum respawn platform. Hornet's
+        // spawns Silksong's prefab on Silksong's separate PlayMaker, so HK's FSMs never hear it.
+        Detour(typeof(SHeroController), "DieFromHazard", OnDieFromHazard, typeof(SHazardType), typeof(float));
     }
 
     public override void HornetActiveUpdate(SHeroController hero) {
@@ -57,8 +62,10 @@ public sealed class DeathModule : ModuleBase {
             var mapZone = hkGm.GetCurrentMapZone();
             if (mapZone is "DREAM_WORLD" or "GODS_GLORY") {
                 yield return DreamReturnRoutine(hkGm);
-            } else {
-                yield return hkGm.PlayerDead(DeathWait); // HK's full death sequence: freeze -> save -> fade -> transition
+            }
+            else {
+                yield return
+                    hkGm.PlayerDead(DeathWait); // HK's full death sequence: freeze -> save -> fade -> transition
 
                 // Wait for the respawn to settle (Knight placed at the marker), timeout-bounded so a quirk can't strand us.
                 var t = 0f;
@@ -175,8 +182,16 @@ public sealed class DeathModule : ModuleBase {
         yield break;
     }
 
-    private IEnumerator NoPlayerDead(System.Func<SGameManager, float, IEnumerator> orig, SGameManager self, float wait) {
+    private IEnumerator NoPlayerDead(System.Func<SGameManager, float, IEnumerator> orig, SGameManager self,
+        float wait) {
         return Empty();
+    }
+
+    // DieFromHazard is an iterator, so orig only creates it; mirror the body's hazardDeath guard here.
+    private IEnumerator OnDieFromHazard(System.Func<SHeroController, SHazardType, float, IEnumerator> orig,
+        SHeroController self, SHazardType type, float angle) {
+        if (type == SHazardType.SPIKES && !self.cState.hazardDeath) PlayMakerFSM.BroadcastEvent("KNIGHT SPIKE HIT");
+        return orig(self, type, angle);
     }
 
     private void OnKnightTakeDamage(System.Action<HeroController, GameObject, CollisionSide, int, int> orig,
@@ -206,6 +221,8 @@ public sealed class DeathModule : ModuleBase {
 
     #region Debug routes
 
+    // Called from the dev server routes on the debug branch.
+    // ReSharper disable UnusedMember.Global
     // POST /getup - force Hornet out of any stuck bench/no_input/dead state.
     internal static object ForceGetUp() {
         var hero = HornetSpawner.Hornet;
@@ -235,7 +252,7 @@ public sealed class DeathModule : ModuleBase {
 
         hc.TakeDamage(hc.gameObject, Silksong::GlobalEnums.CollisionSide.left, 1,
             Silksong::GlobalEnums.HazardType.ENEMY, Silksong::GlobalEnums.DamagePropertyFlags.NonLethal);
-        return new { ok = true, health = pd.health };
+        return new { ok = true, pd.health };
     }
 
     // POST /hazard?type=N - trigger a specific hazard (2=spikes,3=acid,4=lava,5=pit), same mapping as ContactDamageBridge.
@@ -254,8 +271,9 @@ public sealed class DeathModule : ModuleBase {
         pd.isInvincible = false;
         hc.TakeDamage(hc.gameObject, Silksong::GlobalEnums.CollisionSide.left, 1, ss,
             Silksong::GlobalEnums.DamagePropertyFlags.NonLethal);
-        return new { ok = true, hkType = hk, ssHazard = ss.ToString(), health = pd.health };
+        return new { ok = true, hkType = hk, ssHazard = ss.ToString(), pd.health };
     }
+    // ReSharper restore UnusedMember.Global
 
     #endregion
 }
