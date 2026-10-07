@@ -317,6 +317,7 @@ internal static class GameCamerasBootstrap {
         if (on) {
             ApplyHudScale(); // HudGlobalHide.OnEnable just reset Hud Canvas Offset; re-assert the shrink
             HudRefresh.RefreshMaxSilkHud();
+            HudRefresh.RefreshBindOrbFrame();
             HornetHudShown?.Invoke();
         }
     }
