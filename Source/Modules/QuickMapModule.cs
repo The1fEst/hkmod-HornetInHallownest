@@ -1,52 +1,62 @@
 extern alias Silksong;
 using System;
+using System.Collections.Generic;
 using HornetInHallownest.Core;
-using HutongGames.PlayMaker.Actions;
-using SActorStates = Silksong::GlobalEnums.ActorStates;
+using UnityEngine;
+using SHeroController = Silksong::HeroController;
+using SPlayerData = Silksong::PlayerData;
 
 namespace HornetInHallownest.Modules;
 
-// HK's quick map is the Knight's own "Map Control" FSM, left running while he's inert (KnightPresence). It gates on his
-// HeroController.CanQuickMap and freezes him via SendMessage; both have to act on Hornet instead.
+// Hornet's own "Map Control" FSM runs the quick map (slow map walk, animations, double tap for the inventory map), but it
+// opens Silksong's map UI through EventRegister events. Gate it on HK's map and route those events to HK's map instead.
 public sealed class QuickMapModule : ModuleBase {
-    internal const string MapControlFsm = "Map Control";
+    // Silksong EventRegister event -> HK's quick map FSM event
+    private static readonly Dictionary<int, string> quickMapEvents = new() {
+        { "OPEN QUICK MAP".GetHashCode(), "OPEN QUICK MAP" },
+        { "CLOSE QUICK MAP".GetHashCode(), "CLOSE QUICK MAP" },
+        { "CLOSE QUICK MAP INSTANT".GetHashCode(), "CLOSE QUICK MAP" }
+    };
+
+    private static readonly int openInventoryMap = "OPEN INVENTORY MAP".GetHashCode();
 
     public override string Id => "quick-map";
 
     public override void Initialize() {
-        Detour(typeof(HeroController), "CanQuickMap", OnCanQuickMap);
-        Detour(typeof(SendMessage), "DoSendMessage", OnSendMessage);
+        Detour(typeof(SHeroController), "CanQuickMap", OnCanQuickMap, typeof(bool));
+        Detour(typeof(Silksong::EventRegister), "SendEvent", OnSendEvent, typeof(int), typeof(GameObject));
     }
 
-    // HK's conditions on Hornet's state; Silksong's own CanQuickMap requires a Pharloom map.
-    private static bool OnCanQuickMap(Func<HeroController, bool> orig, HeroController self) {
-        var hornet = HornetSpawner.Hornet;
-        if (!HeroSwitch.HornetActive || !hornet || self.enabled) return orig(self);
-        return !GameManager.instance.isPaused && !hornet.controlReqlinquished &&
-               hornet.hero_state != SActorStates.no_input && hornet.cState is {
-                   onConveyor: false, dashing: false, backDashing: false, attacking: false, recoiling: false,
-                   transitioning: false, hazardDeath: false, hazardRespawning: false, recoilFrozen: false,
-                   onGround: true
-               } && hornet.CanInput();
+    // Silksong requires a Pharloom map (HasAnyMap); mapAllRooms short-circuits that check to HK's hasMap.
+    private static bool OnCanQuickMap(Func<SHeroController, bool, bool> orig, SHeroController self, bool onBench) {
+        var pd = SPlayerData.instance;
+        var mapAllRooms = pd.mapAllRooms;
+        pd.mapAllRooms = PlayerData.instance.hasMap;
+        try {
+            return orig(self, onBench);
+        } finally {
+            pd.mapAllRooms = mapAllRooms;
+        }
     }
 
-    private static void OnSendMessage(Action<SendMessage> orig, SendMessage self) {
-        orig(self);
-        if (!HeroSwitch.HornetActive || self.Fsm.Name != MapControlFsm) return;
-        if (HornetSpawner.Hornet is not { } hornet) return;
-        switch (self.functionCall.FunctionName) {
-            case "RelinquishControl":
-                hornet.RelinquishControl();
-                break;
-            case "StopAnimationControl":
-                hornet.StopAnimationControl();
-                break;
-            case "RegainControl":
-                hornet.RegainControl();
-                break;
-            case "StartAnimationControl":
-                hornet.StartAnimationControl();
-                break;
+    private static void OnSendEvent(Action<int, GameObject> orig, int eventNameHash, GameObject excludeGameObject) {
+        if (!HeroSwitch.HornetActive) {
+            orig(eventNameHash, excludeGameObject);
+            return;
+        }
+
+        if (quickMapEvents.TryGetValue(eventNameHash, out var hkEvent)) {
+            var quickMap = GameCameras.instance ? GameCameras.instance.hudCamera.transform.Find("Quick Map") : null;
+            if (quickMap)
+                foreach (var fsm in quickMap.GetComponents<PlayMakerFSM>())
+                    fsm.SendEvent(hkEvent);
+        }
+        else if (eventNameHash == openInventoryMap) {
+            var inventory = GameManager.instance.inventoryFSM;
+            if (inventory) inventory.SendEvent("OPEN INVENTORY MAP");
+        }
+        else {
+            orig(eventNameHash, excludeGameObject);
         }
     }
 }

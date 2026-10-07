@@ -23,7 +23,7 @@ public sealed class InputModule : ModuleBase {
         (h => h.paneLeft, s => s.PaneLeft), (h => h.paneRight, s => s.PaneRight),
         (h => h.menuSubmit, s => s.MenuSubmit),
         (h => h.rs_up, s => s.RsUp), (h => h.rs_down, s => s.RsDown), (h => h.rs_left, s => s.RsLeft),
-        (h => h.rs_right, s => s.RsRight)
+        (h => h.rs_right, s => s.RsRight), (h => h.quickMap, s => s.QuickMap)
     ];
 
     // Overridable actions. Null in config means use the HK equivalent binding.
