@@ -1,5 +1,6 @@
 extern alias Silksong;
 using System;
+using System.Collections;
 using HornetInHallownest.Core;
 using HornetInHallownest.Util;
 using UnityEngine;
@@ -17,6 +18,46 @@ public sealed class PogoModule : ModuleBase {
     public override void Initialize() {
         Detour(typeof(Silksong::HeroDownAttack), "IsNonBounce", OnIsNonBounce, typeof(GameObject));
         Detour(typeof(Silksong::HeroDownAttack), "ContinueBounceTrigger", OnContinueBounce, typeof(GameObject));
+        Detour(typeof(BounceShroom), "Start", OnShroomStart);
+    }
+
+    // Landing on a shroom: BounceShroom's collision handler messages HeroController.instance, the inert Knight.
+    private void OnShroomStart(Action<BounceShroom> orig, BounceShroom self) {
+        orig(self);
+        if (!self.active) return;
+        foreach (var trigger in self.GetComponentsInChildren<CollisionEnterEvent>())
+            trigger.OnCollisionEnteredDirectional += BounceOffShroom;
+    }
+
+    private void BounceOffShroom(CollisionEnterEvent.Direction direction, Collision2D collision) {
+        var hero = HeroSwitch.HornetActive ? HornetSpawner.Hornet : null;
+        if (!hero || collision.gameObject != hero.gameObject) return;
+        switch (direction) {
+            case CollisionEnterEvent.Direction.Left:
+                hero.RecoilLeft();
+                break;
+            case CollisionEnterEvent.Direction.Right:
+                hero.RecoilRight();
+                break;
+            case CollisionEnterEvent.Direction.Top:
+                if (hero.Bounce()) RecoilRandomly(hero);
+                else StartCoroutine(BounceWhenControlled(hero, collision.otherCollider, collision.collider));
+                break;
+        }
+    }
+
+    // Mantling onto a shroom lands her while control is still relinquished, which Bounce refuses, and no new collision
+    // follows once she's standing on it.
+    private static IEnumerator BounceWhenControlled(Silksong::HeroController hero, Collider2D shroom,
+        Collider2D heroCollider) {
+        var deadline = Time.time + 1f;
+        while (hero && hero.controlReqlinquished && Time.time < deadline) yield return null;
+        if (hero && shroom && shroom.IsTouching(heroCollider) && hero.Bounce()) RecoilRandomly(hero);
+    }
+
+    private static void RecoilRandomly(Silksong::HeroController hero) {
+        if (UnityEngine.Random.Range(0, 2) == 0) hero.RecoilLeft();
+        else hero.RecoilRight();
     }
 
     // Honor HK's NonBouncer too (postfix). Covers both pogo paths (ContinueBounceTrigger, OnHitResponded).
