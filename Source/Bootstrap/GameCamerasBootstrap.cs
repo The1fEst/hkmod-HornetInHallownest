@@ -326,11 +326,10 @@ internal static class GameCamerasBootstrap {
     }
 
     // Re-point everything HK owns at the active hero. HK re-grabs all of this to its Knight on scene entry (CameraTarget
-    // in SceneInit, vignette re-parent, hudCanvas re-enable), so this is called on both triggers that need it: a hero
-    // switch (HeroSwitch.SetActive) and scene entry (HornetSpawner, after the hero is placed). No per-frame polling.
+    // in SceneInit, hudCanvas re-enable), so this is called on both triggers that need it: a hero switch
+    // (HeroSwitch.SetActive) and scene entry (HornetSpawner, after the hero is placed). No per-frame polling.
     internal static void SyncToActiveHero() {
         RetargetCamera(HeroSwitch.TransformOf(HeroSwitch.ActiveHeroGameObject));
-        EnsureVignetteOnCamera();
         SyncMainCameraToHk();
         if (HornetHudReady) {
             SetHornetHudVisible(HeroSwitch.HornetActive);
@@ -350,23 +349,6 @@ internal static class GameCamerasBootstrap {
         camTarget.SetFieldValue("heroTransform", t);
     }
 
-    // Reparent the Knight's screen vignette (the scene's real per-scene darkening, driven by its Darkness Control FSM) to
-    // the render camera so it stays screen-centred for both heroes, and keep it live. Off the Knight's subtree also spares
-    // it from KnightPresence's inert FSM sweep. Idempotent (parent compare returns early).
-    internal static void EnsureVignetteOnCamera() {
-        var knight = HeroController.UnsafeInstance;
-        if (!knight || !knight.vignette) return;
-        var gc = GameCameras.instance;
-        var cam = gc ? gc.mainCamera : null;
-        if (!cam) return;
-        var vt = knight.vignette.transform;
-        if (vt.parent == cam.transform) return;
-        vt.SetParent(cam.transform, true); // keep world scale/rotation
-        var lp = vt.localPosition;
-        vt.localPosition = new Vector3(0f, 0f, lp.z); // centre on the optical axis, keep depth
-        if (!knight.vignette.gameObject.activeSelf) knight.vignette.gameObject.SetActive(true);
-        if (knight.vignetteFSM && !knight.vignetteFSM.enabled) knight.vignetteFSM.enabled = true;
-    }
 
     // Keep Silksong's neutered main camera on HK's live camera. Both AudioEventManager (distance-culls 3D one-shots) and
     // LowPassDistance (muffles hero SFX by distance) read GameCameras.mainCamera.position every frame; a one-time

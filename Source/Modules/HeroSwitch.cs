@@ -14,7 +14,7 @@ internal enum ActiveHero {
 
 // Which character the player controls (Knight = HK's hero, Hornet = the spawned Silksong hero). Owns the switch: the
 // outgoing hero goes inert, the incoming one active (KnightPresence/HornetPresence), then the shared HK-owned state
-// (camera, vignette, HUD, audio, the PlayMaker "Hero" var) is re-pointed at the new hero via ReassertEnvironment - on
+// (camera, HUD, audio, the PlayMaker "Hero" var) is re-pointed at the new hero via ReassertEnvironment - on
 // the switch and on scene entry (HornetSpawner), the two points where HK resets that state to its Knight. No per-frame
 // work: the only live driver is HeroSwitchInput (the switch key poll).
 internal static class HeroSwitch {
@@ -68,6 +68,8 @@ internal static class HeroSwitch {
         if (rb && rb.simulated) rb.linearVelocity = Vector2.zero;
     }
 
+    // The dev server routes on the debug branch also call Toggle and return its result.
+    // ReSharper disable once MemberCanBePrivate.Global, UnusedMethodReturnValue.Global
     internal static object Toggle() {
         return SetActive(HornetActive ? ActiveHero.Knight : ActiveHero.Hornet);
     }
@@ -80,10 +82,6 @@ internal static class HeroSwitch {
         Active = who;
         var knightTransform = TransformOf(knight.Root);
         var hornetTransform = TransformOf(hornet.Root);
-
-        // Reparent the vignette off the Knight (onto the camera) before the presence sweep, so deactivating the Knight
-        // doesn't disable its Darkness Control FSM along with his other FSMs.
-        GameCamerasBootstrap.EnsureVignetteOnCamera();
 
         if (BothActive) {
             // Both heros stay active, switch only applies to camera/HUD/fsm targetting.
@@ -115,7 +113,7 @@ internal static class HeroSwitch {
         return new { active = Active.ToString() };
     }
 
-    // Re-point the HK-owned state (camera/vignette/HUD/audio + the PlayMaker "Hero" var) at the active hero, and re-hide
+    // Re-point the HK-owned state (camera/HUD/audio + the PlayMaker "Hero" var) at the active hero, and re-hide
     // the inactive one. HK resets all of this to its Knight on a switch and on scene entry, so both call this.
     internal static void ReassertEnvironment() {
         GameCamerasBootstrap.SyncToActiveHero();
