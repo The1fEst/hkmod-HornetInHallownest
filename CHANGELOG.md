@@ -23,6 +23,8 @@
 - Fix the dreamer prompt asking Hornet to Focus instead of playing Needolin
 - Fix Hornet moving freely while a dreamer is absorbed and during the mask-break cutscene, and let her lie down and get
   up afterwards like the Knight
+- Hornet now dies with her death animation, leaves her geo in a cocoon where she fell and breaks her silk spool until it's
+  recovered, except in dreams, the White Palace and Godhome
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings

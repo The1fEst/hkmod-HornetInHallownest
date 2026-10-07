@@ -5,6 +5,12 @@ using HornetInHallownest.Bootstrap;
 using HornetInHallownest.Core;
 using HornetInHallownest.Util;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using Object = UnityEngine.Object;
+using USceneManager = UnityEngine.SceneManagement.SceneManager;
+using SPlayerData = Silksong::PlayerData;
+using SGameplay = Silksong::GlobalSettings.Gameplay;
+using SCocoonTypes = Silksong::GlobalEnums.HeroDeathCocoonTypes;
 using SHeroController = Silksong::HeroController;
 using SHeroBox = Silksong::HeroBox;
 using SGameManager = Silksong::GameManager;
@@ -14,20 +20,26 @@ using SHazardType = Silksong::GlobalEnums.HazardType;
 namespace HornetInHallownest.Modules;
 
 // Silksong's HeroController.Die is invoked, but the gm.PlayerDead is skipped, HK owns the respawn.
-// TODO: currently all deaths are nonlethal, fix lethal pathway and cocoon spawns
+// Deaths stay NonLethal: Silksong's lethal Die reads its GameManager's tilemap and map, which don't exist here. Its cocoon
+// bookkeeping is redone on HK's scene and geo (LeaveCocoon), and the cocoon spawns on that scene's load.
 public sealed class DeathModule : ModuleBase {
     private const float DeathWait = 2.5f; // lets the Silksong death anim play before HK fades (mirrors HK's DEATH_WAIT)
+    private const string CocoonPrefabPath = "Assets/Prefabs/Heroes/Hornet Cocoon Corpse.prefab";
 
     // HK's "Hero Death Anim" fades the white blanker in over DreamFadeTime, DreamFadeWait before a dream return.
     private const float DreamFadeTime = 1.5f;
     private const float DreamFadeWait = 1.75f;
     private bool handling;
     private bool wasDead;
+    private static GameObject? cocoonPrefab;
 
     public override string Id => "death";
 
     public override void Initialize() {
         Detour(typeof(SGameManager), "PlayerDead", NoPlayerDead, typeof(float));
+        Detour(typeof(SHeroController), "GetHeroDeathPrefab", OnGetHeroDeathPrefab, typeof(bool), typeof(bool),
+            typeof(bool));
+        USceneManager.sceneLoaded += SpawnCocoon;
 
         // HK hazard zones call HeroController.instance.TakeDamage on the inert Knight; ContactDamageBridge already routes
         // hazard damage to Hornet, so skip the Knight's while she's active.
@@ -53,6 +65,63 @@ public sealed class DeathModule : ModuleBase {
         wasDead = dead;
     }
 
+    protected override void OnDeinitialize() {
+        USceneManager.sceneLoaded -= SpawnCocoon;
+    }
+
+    // HK's dream zones end in a dream return without a shade, so Hornet loses nothing there either.
+    private static bool IsDreamZone(string mapZone) => mapZone is "DREAM_WORLD" or "WHITE_PALACE" or "GODS_GLORY";
+
+    private static GameObject OnGetHeroDeathPrefab(System.Func<SHeroController, bool, bool, bool, GameObject> orig,
+        SHeroController self, bool nonLethal, bool inMemoryScene, bool isFrostDamage) {
+        var lethal = !IsDreamZone(GameManager.instance.GetCurrentMapZone());
+        return orig(self, nonLethal && !lethal, inMemoryScene, isFrostDamage);
+    }
+
+    // Silksong's lethal Die bookkeeping (HeroController.Die), on HK's scene and geo.
+    private static void LeaveCocoon(SHeroController hero) {
+        var spd = SPlayerData.instance;
+        var geo = PlayerData.instance.geo;
+        var keptGeo = SGameplay.DeadPurseTool.IsEquipped ? Mathf.RoundToInt(geo * SGameplay.DeadPurseHoldPercent) : 0;
+        PlayerData.instance.TakeGeo(geo - keptGeo);
+
+        spd.HeroCorpseScene = GameManager.instance.GetSceneNameString();
+        spd.HeroCorpseMarkerGuid = null;
+        spd.HeroDeathScenePos = hero.transform.position;
+        spd.HeroCorpseMoneyPool = geo - keptGeo;
+        spd.HeroCorpseType = SCocoonTypes.Normal;
+        if (spd.IsAnyCursed) spd.HeroCorpseType |= SCocoonTypes.Cursed;
+        if (SGameplay.DeadPurseTool.IsEquipped && spd.HeroCorpseMoneyPool >= 10)
+            spd.HeroCorpseType |= SCocoonTypes.Rosaries;
+        spd.IsSilkSpoolBroken = true;
+    }
+
+    private static void SpawnCocoon(Scene scene, LoadSceneMode mode) {
+        var spd = SPlayerData.instance;
+        if (spd == null || string.IsNullOrEmpty(spd.HeroCorpseScene) || scene.name != spd.HeroCorpseScene) return;
+        if (!LoadCocoonPrefab()) return;
+
+        var pos = spd.HeroDeathScenePos;
+        var cocoon = Object.Instantiate(cocoonPrefab!, new Vector3(pos.x, pos.y, cocoonPrefab!.transform.position.z),
+            Quaternion.identity);
+        // Instantiate lands in the still-active previous scene, which unloads right after.
+        USceneManager.MoveGameObjectToScene(cocoon, scene);
+    }
+
+    // The cocoon has no Addressables key of its own; it ships in Hero_Hornet's bundle.
+    private static bool LoadCocoonPrefab() {
+        if (cocoonPrefab) return true;
+        if (!HornetSpawner.HeroPrefab) return false;
+        foreach (var bundle in AssetBundle.GetAllLoadedAssetBundles())
+            if (bundle.Contains(CocoonPrefabPath)) {
+                cocoonPrefab = bundle.LoadAsset<GameObject>(CocoonPrefabPath);
+                return cocoonPrefab;
+            }
+
+        Log.Error($"[Death] no loaded bundle has {CocoonPrefabPath}");
+        return false;
+    }
+
     public override void HornetToggled(bool active) {
         if (!active) wasDead = false; // don't carry a stale edge across a switch/despawn
     }
@@ -68,6 +137,7 @@ public sealed class DeathModule : ModuleBase {
                 yield return DreamReturnRoutine(hkGm);
             }
             else {
+                if (!IsDreamZone(mapZone) && HornetSpawner.Hornet is { } hero) LeaveCocoon(hero);
                 yield return
                     hkGm.PlayerDead(DeathWait); // HK's full death sequence: freeze -> save -> fade -> transition
 

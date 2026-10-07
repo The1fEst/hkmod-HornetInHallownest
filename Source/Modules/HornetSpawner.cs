@@ -25,7 +25,7 @@ public sealed class HornetSpawner : ModuleBase {
 
     // Load via Addressables (not manual LoadFromFile): it owns the full dependency closure, so the game's own runtime
     // loads (GameManager.EnsureGlobalPool -> "GlobalPool") reuse those bundles instead of double-loading.
-    private static GameObject? HeroPrefab {
+    internal static GameObject? HeroPrefab {
         get {
             if (field) return field;
             SilksongAddressables.EnsureMounted();
