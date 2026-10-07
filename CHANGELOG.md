@@ -7,7 +7,8 @@
 - Fix softlock when picking up the Crystal Heart as Hornet
 - Fix softlock in the City of Tears fountain cutscene with Hornet
 - Hide Hornet's HUD during cutscenes and dialogue, like the Knight's
-- Play Hornet's own wake-up animation when arriving in a dream, instead of her walking around invisible
+- Play Hornet's own wake-up animation when arriving in a dream, or kneel and stand up for Hall of Gods fights, instead of
+  her walking around invisible
 - Fix Hornet's silk spool showing empty or frozen chunks after loading a save or switching heroes
 - Fix bounce shrooms not bouncing Hornet when she lands on them
 - Fix Hornet's side and up slashes passing through bounce shrooms instead of knocking her back
