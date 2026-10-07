@@ -1,10 +1,13 @@
 extern alias Silksong;
+extern alias SilksongPM;
 using System;
 using System.Collections;
 using HornetInHallownest.Core;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using SFreeze = Silksong::GlobalEnums.FreezeMomentTypes;
+using SFsm = SilksongPM::HutongGames.PlayMaker.Fsm;
+using SFsmState = SilksongPM::HutongGames.PlayMaker.FsmState;
 
 namespace HornetInHallownest.Modules;
 
@@ -27,6 +30,17 @@ public sealed class MinorFixesModule : ModuleBase {
         Detour(typeof(Silksong::HeroController), nameof(Silksong::HeroController.PreventCastByDialogueEnd),
             OnPreventCastByDialogueEnd);
         Detour(typeof(IgnoreHeroCollision), "Ignore", OnIgnoreHeroCollision);
+        Detour(typeof(SFsm), "SwitchState", OnSilksongSwitchState, typeof(SFsmState));
+    }
+
+    // A bind interrupted by damage goes through "Cancel All", which, unlike finishing it ("Shaman End?") or cancelling it
+    // mid-air ("Shaman Air Cancel"), never plays the Shaman crest halo's "End", so the halo stays on Hornet.
+    private static void OnSilksongSwitchState(Action<SFsm, SFsmState> orig, SFsm self, SFsmState to) {
+        orig(self, to);
+        if (self.Name != "Bind" || to.Name != "Cancel All") return;
+        var halo = self.GameObject.transform.Find("Bind Effects/shaman_focus_halo");
+        if (!halo || !halo.gameObject.activeSelf || !halo.TryGetComponent<Animator>(out var animator)) return;
+        if (!animator.GetCurrentAnimatorStateInfo(0).IsName("End")) animator.Play("End");
     }
 
     #region Sprint + cutscene RelinquishControl
