@@ -34,6 +34,7 @@
 - Fix the frame around Hornet's silk spool not changing with her crest and not showing the evolved Hunter Crest's combo
   after her HUD was hidden
 - Fix the Beast Crest's rage not tinting the screen edges red
+- Fix the camera never shaking from Hornet's binds, attacks and other Silksong effects
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings
