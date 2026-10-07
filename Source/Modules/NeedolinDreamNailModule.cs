@@ -17,19 +17,37 @@ public sealed class NeedolinDreamNailModule : ModuleBase {
     private GameObject? hitboxGo;
     private Collider2D? collider;
     private bool wasPlaying;
+    private static string? drainEndScene;
 
     public override string Id => "needolin-dreamnail";
 
     public override void Initialize() {
-        // A dreamer's dream prompts "Hold [Cast] Focus" through the HUD Control Reminder's "Display" FSM; Hornet drains
-        // the dreamer with Needolin on the Dream Nail bind instead.
         Detour(typeof(Fsm), "SwitchState", OnSwitchState, typeof(FsmState));
     }
 
     private static void OnSwitchState(Action<Fsm, FsmState> orig, Fsm self, FsmState to) {
         orig(self, to);
-        if (self.Name != "Display" || self.GameObjectName != "Control Reminder") return;
+        if (self is { Name: "Display", GameObjectName: "Control Reminder" }) ShowDreamerReminder(self, to);
 
+        if (self is { Name: "Control", GameObjectName: "Dreamer NPC" } && to.Name == "End Start")
+            drainEndScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+    }
+
+    // From "End Start" the dreamer sets the Knight's Spell Control "Dream End" and he finishes draining without input.
+    // Hold Hornet every frame until the dream unloads: Needolin hands control back whenever it stops playing.
+    private static void HoldThroughDrainEnd(Silksong::HeroController hero) {
+        if (drainEndScene == null) return;
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != drainEndScene) {
+            drainEndScene = null;
+            return;
+        }
+
+        if (!hero.controlReqlinquished || hero.acceptingInput) hero.RelinquishControl();
+    }
+
+    // A dreamer's dream prompts "Hold [Cast] Focus" through the HUD Control Reminder's "Display" FSM; Hornet drains the
+    // dreamer with Needolin on the Dream Nail bind instead.
+    private static void ShowDreamerReminder(Fsm self, FsmState to) {
         var reminder = self.GameObject.transform;
         var needolin = to.Name == "Focus" && HeroSwitch.HornetActive &&
                        UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
@@ -54,6 +72,8 @@ public sealed class NeedolinDreamNailModule : ModuleBase {
     }
 
     public override void HornetActiveUpdate(Silksong::HeroController hero) {
+        HoldThroughDrainEnd(hero);
+
         // Not Silk Specials' "Needolin Sub" state: holding the button while CanPlayNeedolin() fails re-enters it every
         // few frames, and each re-entry would dream-impact (white flash) everything in range.
         var playing = Silksong::HeroPerformanceRegion.IsPerforming;
@@ -66,6 +86,9 @@ public sealed class NeedolinDreamNailModule : ModuleBase {
     private void NeedolinToggled(Silksong::HeroController hero, bool playing) {
         if (!playing) {
             if (collider) collider.enabled = false;
+            // Releasing Focus broadcasts this in vanilla: a draining dreamer goes back to waiting instead of draining on
+            // while Hornet walks off its platform.
+            PlayMakerFSM.BroadcastEvent("DREAM FOCUS END");
             return;
         }
 
