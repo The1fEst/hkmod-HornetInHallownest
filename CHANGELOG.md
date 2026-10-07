@@ -9,6 +9,7 @@
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings
 - Fix Hornet's remaining sounds (e.g. Reaper crest mode) ignoring the volume settings
+- Fix black screen softlock when entering a room after a collision-ignoring object was unloaded early
 - Fix Trial of the Fool respawn platform not appearing after a spike hit as Hornet
 - Allow opening the quick map as Hornet outside of benches
 - Allow opening the inventory map as Hornet by double-tapping quick map, like the Knight
