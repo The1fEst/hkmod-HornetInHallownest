@@ -104,8 +104,10 @@ public sealed class QuickMapModule : ModuleBase {
     private IEnumerator SwitchToHornetInventory(PlayMakerFSM hkInventory, int direction) {
         leavingHkMap = true;
         try {
-            hkInventory.SendEvent("CLOSE");
+            // The forced close HK uses on scene transitions; a plain CLOSE can leave the map pane drawn.
+            hkInventory.SendEvent("INVENTORY CANCEL");
             for (var i = 0; i < 300 && hkInventory.ActiveStateName != "Closed"; i++) yield return null;
+            if (hkInventory.ActiveStateName != "Closed") yield break;
 
             var list = typeof(SInventoryPaneList).GetFieldValue<SInventoryPaneList>("_instance");
             if (!list) yield break;
