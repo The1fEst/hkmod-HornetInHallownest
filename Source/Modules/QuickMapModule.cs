@@ -37,13 +37,21 @@ public sealed class QuickMapModule : ModuleBase {
     public override void Initialize() {
         Detour(typeof(SHeroController), "CanQuickMap", OnCanQuickMap, typeof(bool));
         Detour(typeof(Silksong::EventRegister), "SendEvent", OnSendEvent, typeof(int), typeof(GameObject));
+        Detour(typeof(SInventoryPane), "get_IsAvailable", OnPaneIsAvailable);
         Detour(typeof(SInventoryPaneList), "SetNextPane", OnSetNextPane, typeof(int), typeof(SInventoryPane));
+        Detour(typeof(SInventoryPaneList), "SetCurrentPane", OnSetCurrentPane, typeof(int), typeof(SInventoryPane));
         Detour(typeof(ListenForPaneLeft), "OnUpdate", OnPaneLeft);
         Detour(typeof(ListenForPaneRight), "OnUpdate", OnPaneRight);
     }
 
-    // Hornet's inventory has no map pane (Silksong's only shows Pharloom and is disabled), so paging onto its slot
-    // switches to HK's inventory on the map instead, and paging off HK's map switches back.
+    // Silksong's map pane only shows Pharloom and stays disabled. It's listed (pane icon) while HK's map is owned, but
+    // moving onto it switches to HK's inventory on the map instead, and paging off HK's map switches back.
+    private static bool OnPaneIsAvailable(Func<SInventoryPane, bool> orig, SInventoryPane self) {
+        if (HeroSwitch.HornetActive && self.TryGetComponent<Silksong::InventoryMapManager>(out _))
+            return PlayerData.instance.hasMap;
+        return orig(self);
+    }
+
     private SInventoryPane OnSetNextPane(Func<SInventoryPaneList, int, SInventoryPane, SInventoryPane> orig,
         SInventoryPaneList self, int direction, SInventoryPane currentPane) {
         if (!HeroSwitch.HornetActive || !PlayerData.instance.hasMap ||
@@ -52,6 +60,15 @@ public sealed class QuickMapModule : ModuleBase {
 
         StartCoroutine(SwitchToHkInventoryMap(self));
         return currentPane; // the FSM cancels a move onto the same pane
+    }
+
+    // Direct moves, e.g. selecting the map's pane icon. Without a current pane the inventory is opening, never onto the map.
+    private SInventoryPane OnSetCurrentPane(Func<SInventoryPaneList, int, SInventoryPane?, SInventoryPane> orig,
+        SInventoryPaneList self, int index, SInventoryPane? currentPane) {
+        if (!HeroSwitch.HornetActive || index != MapPaneIndex || !currentPane) return orig(self, index, currentPane);
+
+        StartCoroutine(SwitchToHkInventoryMap(self));
+        return currentPane;
     }
 
     private void OnPaneLeft(Action<ListenForPaneLeft> orig, ListenForPaneLeft self) {

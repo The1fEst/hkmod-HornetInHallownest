@@ -12,6 +12,7 @@
 - Allow opening the quick map as Hornet outside of benches
 - Allow opening the inventory map as Hornet by double-tapping quick map, like the Knight
 - Allow reaching the map from Hornet's inventory by paging past the last pane, and paging back from it
+- Show the map pane icon in Hornet's inventory once the Knight has a map
 
 ## v0.3.0
 
