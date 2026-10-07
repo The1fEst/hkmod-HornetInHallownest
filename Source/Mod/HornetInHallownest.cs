@@ -129,6 +129,7 @@ public class HornetInHallownest() : Mod("HornetInHallownest"), ITogglableMod, IL
         moduleHost.Add(new QuickMapModule());
         moduleHost.Add(new FsmMethodCallRemapModule());
         moduleHost.Add(new HeroTargetModule());
+        moduleHost.Add(new LifebloodModule());
         moduleHost.Add(new InventoryModule());
         moduleHost.Add(new DeathModule());
         moduleHost.Add(new HeroBroadcastModule());

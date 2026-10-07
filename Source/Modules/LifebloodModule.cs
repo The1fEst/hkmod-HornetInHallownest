@@ -1,7 +1,6 @@
 extern alias Silksong;
 extern alias SilksongPM;
 using System;
-using System.Collections;
 using HornetInHallownest.Core;
 using UnityEngine;
 
@@ -19,7 +18,6 @@ public sealed class LifebloodModule : ModuleBase {
     public override void Initialize() {
         // TODO: less specific hook?
         Detour(typeof(EventRegister), "SendEvent", OnSendEvent, typeof(string), typeof(GameObject));
-        Detour(typeof(ScuttlerControl), "Heal", OnScuttlerHeal);
     }
 
     protected override void OnDeinitialize() {
@@ -45,24 +43,6 @@ public sealed class LifebloodModule : ModuleBase {
         } catch (Exception e) {
             LogError($"relay: {e.Message}");
         }
-    }
-
-    private IEnumerator OnScuttlerHeal(Func<ScuttlerControl, IEnumerator> orig, ScuttlerControl self) {
-        return HeroSwitch.HornetActive ? HornetHeal(self) : orig(self);
-    }
-
-    // ScuttlerControl.Heal deactivates itself if the Knight is >40 away before granting, but the Knight parks at the
-    // switch point while the scuttler homed to Hornet, so the immediate grant is lost and blue only appears on scene
-    // exit. Drop the Knight-distance gate: wait, fire "ADD BLUE HEALTH" (relayed above), deactivate.
-    private IEnumerator HornetHeal(ScuttlerControl self) {
-        yield return new WaitForSeconds(1.2f);
-        try {
-            EventRegister.SendEvent(AddEvent);
-        } catch (Exception e) {
-            LogError($"scuttler heal: {e.Message}");
-        }
-
-        if (self) self.gameObject.SetActive(false);
     }
 
     private SilksongPM::PlayMakerFSM? BlueHealthFsm() {
