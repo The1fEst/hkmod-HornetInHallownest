@@ -3,6 +3,7 @@ extern alias SilksongPM;
 using System;
 using System.Collections;
 using System.Linq;
+using GlobalEnums;
 using HornetInHallownest.Bootstrap;
 using HornetInHallownest.Core;
 using HutongGames.PlayMaker.Actions;
@@ -32,6 +33,7 @@ public sealed class SceneFixesModule : ModuleBase {
         if (birthplaceForcedCharm && scene.name != "Abyss_06_Core") RestoreBirthplaceCharm();
         screamGet = scene.name == "Abyss_12" ? FindScreamGetFsm() : null;
         inShamanTemple = scene.name == "Crossroads_ShamanTemple";
+        AddSilksongNonSliders(scene);
 
         switch (scene.name) {
             case "Deepnest_Spider_Town":
@@ -55,6 +57,23 @@ public sealed class SceneFixesModule : ModuleBase {
             case "Ruins1_27":
                 FixHornetFountainLandGate();
                 break;
+        }
+    }
+
+    // Hornet's wall cling and wall jump look walls up in Silksong's NonSlider registry, which HK's own NonSlider (dreamer
+    // and Godhome blockers, walls under roofs) never joins. Her wall rays also hit solid HERO_DETECTOR colliders (e.g.
+    // the Godhome edges' "End Superdash"), which HK's terrain-only rays never count as walls.
+    private static void AddSilksongNonSliders(Scene scene) {
+        foreach (var root in scene.GetRootGameObjects()) {
+            foreach (var nonSlider in root.GetComponentsInChildren<NonSlider>(true))
+                AddSilksongNonSlider(nonSlider.gameObject);
+            foreach (var collider in root.GetComponentsInChildren<Collider2D>(true))
+                if (collider.gameObject.layer == (int)PhysLayers.HERO_DETECTOR && !collider.isTrigger)
+                    AddSilksongNonSlider(collider.gameObject);
+        }
+
+        static void AddSilksongNonSlider(GameObject go) {
+            if (!go.TryGetComponent<Silksong::NonSlider>(out _)) go.AddComponent<Silksong::NonSlider>();
         }
     }
 
