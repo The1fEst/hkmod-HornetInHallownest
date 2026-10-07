@@ -368,6 +368,8 @@ internal static class GameCamerasBootstrap {
 
             if (!ssMainCamT.GetComponent<MainCamAudioFollow>())
                 ssMainCamT.gameObject.AddComponent<MainCamAudioFollow>();
+            if (!ssMainCamT.GetComponent<MainCamShakeRelay>())
+                ssMainCamT.gameObject.AddComponent<MainCamShakeRelay>();
         } catch (Exception e) {
             Log.Error($"[HUD] SyncMainCameraToHk: {e.Message}");
         }
@@ -388,6 +390,54 @@ internal static class GameCamerasBootstrap {
             }
 
             transform.position = hkCamT.position;
+        }
+    }
+
+    // Silksong shakes the rig's camera, which never renders: its CameraShake FSM moves the rig's CameraParent and
+    // CameraShakeManager offsets the main camera at render time. Carry both onto HK's main camera for each frame's render,
+    // and take them off again before HK's CameraController moves it in LateUpdate.
+    private sealed class MainCamShakeRelay : MonoBehaviour {
+        private static FieldInfo? hkInstanceField;
+        private Silksong::CameraShakeManager? shakeManager;
+        private Vector3 parentRest;
+        private Transform? hkCamT;
+        private Vector3 appliedOffset;
+        private bool isApplied;
+
+        private void Awake() {
+            shakeManager = GetComponent<Silksong::CameraShakeManager>();
+            parentRest = transform.parent ? transform.parent.localPosition : Vector3.zero;
+        }
+
+        private void OnEnable() => Camera.onPreCull += OnCameraPreCull;
+
+        private void OnDisable() {
+            Camera.onPreCull -= OnCameraPreCull;
+            RemoveOffset();
+        }
+
+        private void Update() => RemoveOffset();
+
+        private void OnCameraPreCull(Camera cam) {
+            if (isApplied || !ResolveHkCamera() || !cam.transform.IsChildOf(hkCamT!)) return;
+            appliedOffset = (transform.parent ? transform.parent.localPosition - parentRest : Vector3.zero) +
+                            (shakeManager ? shakeManager.GetFieldValue<Vector3>("currentOffset") : Vector3.zero);
+            hkCamT!.localPosition += appliedOffset;
+            isApplied = true;
+        }
+
+        private void RemoveOffset() {
+            if (!isApplied) return;
+            if (hkCamT) hkCamT.localPosition -= appliedOffset;
+            isApplied = false;
+        }
+
+        private bool ResolveHkCamera() {
+            if (hkCamT) return true;
+            hkInstanceField ??= typeof(GameCameras).GetField("_instance", BindingFlags.NonPublic | BindingFlags.Static);
+            if (hkInstanceField?.GetValue(null) is not GameCameras hk || !hk.mainCamera) return false;
+            hkCamT = hk.mainCamera.transform;
+            return true;
         }
     }
 
