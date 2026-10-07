@@ -1,10 +1,15 @@
 extern alias Silksong;
+extern alias SilksongPM;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using HornetInHallownest.Core;
+using HornetInHallownest.Util;
 using UnityEngine;
 using SHeroController = Silksong::HeroController;
 using SPlayerData = Silksong::PlayerData;
+using SInventoryPane = Silksong::InventoryPane;
+using SInventoryPaneList = Silksong::InventoryPaneList;
 
 namespace HornetInHallownest.Modules;
 
@@ -25,6 +30,43 @@ public sealed class QuickMapModule : ModuleBase {
     public override void Initialize() {
         Detour(typeof(SHeroController), "CanQuickMap", OnCanQuickMap, typeof(bool));
         Detour(typeof(Silksong::EventRegister), "SendEvent", OnSendEvent, typeof(int), typeof(GameObject));
+        Detour(typeof(SInventoryPaneList), "SetNextPane", OnSetNextPane, typeof(int), typeof(SInventoryPane));
+    }
+
+    // Hornet's inventory has no map pane (Silksong's only shows Pharloom and is disabled), so paging onto its slot
+    // switches to HK's inventory on the map instead.
+    private SInventoryPane OnSetNextPane(Func<SInventoryPaneList, int, SInventoryPane, SInventoryPane> orig,
+        SInventoryPaneList self, int direction, SInventoryPane currentPane) {
+        if (!HeroSwitch.HornetActive || !PlayerData.instance.hasMap || !PassesMapSlot(self, direction, currentPane))
+            return orig(self, direction, currentPane);
+
+        StartCoroutine(SwitchToHkInventoryMap(self));
+        return currentPane; // the FSM cancels a move onto the same pane
+    }
+
+    // InventoryPaneList.GetNextPane's walk: does it reach the map slot before the next available pane?
+    private static bool PassesMapSlot(SInventoryPaneList list, int direction, SInventoryPane currentPane) {
+        var count = list.TotalPaneCount;
+        var index = list.GetPaneIndex(currentPane);
+        for (var i = 0; i < count; i++) {
+            index = (index + direction + count) % count;
+            if (index == (int)SInventoryPaneList.PaneTypes.Map) return true;
+            var pane = list.GetPane(index);
+            if (pane && list.InvokeMethod<bool>("IsPaneAvailable", pane, (SInventoryPaneList.PaneTypes)index))
+                return false;
+        }
+
+        return false;
+    }
+
+    private static IEnumerator SwitchToHkInventoryMap(SInventoryPaneList list) {
+        var fsm = SilksongPM::PlayMakerFSM.FindFsmOnGameObject(list.gameObject, "Inventory Control");
+        if (!fsm) yield break;
+        for (var i = 0; i < 120 && fsm.ActiveStateName != "Opened"; i++) yield return null;
+        fsm.SendEvent("CLOSE");
+        for (var i = 0; i < 300 && fsm.ActiveStateName != "Closed"; i++) yield return null;
+        var inventory = GameManager.instance.inventoryFSM;
+        if (inventory) inventory.SendEvent("OPEN INVENTORY MAP");
     }
 
     // Silksong requires a Pharloom map (HasAnyMap); mapAllRooms short-circuits that check to HK's hasMap.
