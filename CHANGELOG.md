@@ -60,6 +60,8 @@
 - Show only HK's screens for the Knight's pickups, and leave out HK's screen when Hornet's own message announces the
   same reward
 - Fix Hornet's sprint bonking off the City of Tears lifts, and her stopping at other walls only the Knight could pass
+- Fix soul totems filling Hornet's whole silk spool: soul from totems, Grubsong and Dream Nail hits turns into silk at
+  the rate of a nail hit
 - Make Sylphsong restore Hornet's silk while she rests at a bench, at the pace of Silksong's benches
 - Make Needolin enter a dream only once it has spent its first silk, like charging the Dream Nail, instead of right away
 - Give Hornet plain Needolin from the start; the Dream Nail unlocks Elegy of the Deep (Needolin holding down), which
