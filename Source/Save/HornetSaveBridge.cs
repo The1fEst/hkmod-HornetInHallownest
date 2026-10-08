@@ -93,6 +93,7 @@ public sealed class HornetSaveBridge : ModuleBase {
 
     private static void Resync() {
         PlayerDataSyncModule.SyncHkToSs();
+        ProgressionModule.Apply();
         HudRefresh.ResetHealthHud();
         HudRefresh.RefreshMaxSilkHud();
         // A restore bypasses SetEquippedTools, so refresh them manually.
