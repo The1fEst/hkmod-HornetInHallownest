@@ -50,6 +50,8 @@
 - Announce the tools, crests and Memory Lockets Hornet earns with Silksong's own item and crest messages
 - Fix a down attack carried through a room transition staying armed and pogoing off the first thing Hornet touches
 - Fix Hornet's inventory still showing the Memory Lockets of a save loaded earlier in the session
+- Make Hornet's Compass show her on the map and her Magnetite Brooch pull in geo, in place of the Knight's Wayward
+  Compass and Gathering Swarm
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings

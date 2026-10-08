@@ -121,6 +121,7 @@ public class HornetInHallownest() : Mod("HornetInHallownest"), ITogglableMod, IL
         moduleHost.Add(new MinorFixesModule());
         moduleHost.Add(new PlayerDataSyncModule());
         moduleHost.Add(new ProgressionModule());
+        moduleHost.Add(new ToolCharmBridgeModule());
         moduleHost.Add(new CurrencyModule());
         moduleHost.Add(new FsmLookupModule());
         moduleHost.Add(new HeroSfxModule());
