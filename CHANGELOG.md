@@ -54,6 +54,7 @@
 - Show Hornet's Silksong UI in the language picked in HK instead of always in English
 - Give Hornet her Silk Hearts for HK's spells: the first spell, all three, and the first one upgraded, instead of for
   nail arts and the Shade Cloak
+- Give Hornet only one Silkshot, from the first dreamer she defeats, like Silksong's one-of-three choice
 - Make Sylphsong restore Hornet's silk while she rests at a bench, at the pace of Silksong's benches
 - Make Needolin enter a dream only once it has spent its first silk, like charging the Dream Nail, instead of right away
 - Give Hornet plain Needolin from the start; the Dream Nail unlocks Elegy of the Deep (Needolin holding down), which
