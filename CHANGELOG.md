@@ -59,6 +59,7 @@
 - Announce the silk skills Hornet earns with Silksong's full-screen skill message, in place of HK's spell screen
 - Show only HK's screens for the Knight's pickups, and leave out HK's screen when Hornet's own message announces the
   same reward
+- Let Hornet's down-dash break Desolate Dive floors only once Desolate Dive is earned
 - Fix Hornet slipping out of bounds by vaulting or clambering at a wall whose top meets a low ceiling
 - Fix Hornet's sprint bonking off the City of Tears lifts, and her stopping at other walls only the Knight could pass
 - Announce Swift Step, Cling Grip, Clawline and Silk Soar with Silksong's full-screen message when Hornet earns them
