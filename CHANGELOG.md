@@ -52,6 +52,8 @@
 - Announce Sylphsong with Silksong's full-screen skill message when Hornet earns it
 - Make Sylphsong restore Hornet's silk while she rests at a bench, at the pace of Silksong's benches
 - Make Needolin enter a dream only once it has spent its first silk, like charging the Dream Nail, instead of right away
+- Give Hornet plain Needolin from the start; the Dream Nail unlocks Elegy of the Deep (Needolin holding down), which
+  acts as the Dream Nail, while any song still drains a dreamer from inside its dream
 - Fix a down attack carried through a room transition staying armed and pogoing off the first thing Hornet touches
 - Fix Hornet's inventory still showing the Memory Lockets of a save loaded earlier in the session
 - Make Hornet's Compass show her on the map and her Magnetite Brooch pull in geo, in place of the Knight's Wayward
