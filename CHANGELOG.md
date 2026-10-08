@@ -54,6 +54,8 @@
 - Make Needolin enter a dream only once it has spent its first silk, like charging the Dream Nail, instead of right away
 - Give Hornet plain Needolin from the start; the Dream Nail unlocks Elegy of the Deep (Needolin holding down), which
   acts as the Dream Nail, while any song still drains a dreamer from inside its dream
+- Add Beastling Call (Needolin holding up), unlocked with the Dream Gate: it takes Hornet to the stag station the Stag
+  waits at, wherever HK would let her set a Dream Gate
 - Fix a down attack carried through a room transition staying armed and pogoing off the first thing Hornet touches
 - Fix Hornet's inventory still showing the Memory Lockets of a save loaded earlier in the session
 - Make Hornet's Compass show her on the map and her Magnetite Brooch pull in geo, in place of the Knight's Wayward
