@@ -46,8 +46,7 @@
 - Hornet earns Memory Lockets from charm notches, Grubfather, relics and the Seer, and opens the crest slots she picks
   with them, like in Silksong
 - Fix a new game showing tools and items Hornet had in the game played before it
-- Fix Hornet's masks never appearing after switching to her during a new game's intro: switching to Hornet now waits
-  until the Knight's HUD is in
+- Fix Hornet's masks never appearing in a new game
 - Announce the tools, crests and Memory Lockets Hornet earns with Silksong's own item and crest messages
 - Fix a down attack carried through a room transition staying armed and pogoing off the first thing Hornet touches
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
