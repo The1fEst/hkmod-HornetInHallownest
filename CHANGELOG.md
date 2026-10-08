@@ -62,6 +62,8 @@
 - Fix Hornet's sprint bonking off the City of Tears lifts, and her stopping at other walls only the Knight could pass
 - Announce Swift Step, Cling Grip, Clawline and Silk Soar with Silksong's full-screen message when Hornet earns them
   from the Mothwing Cloak, Mantis Claw, Crystal Heart and King's Brand, in place of HK's screen
+- Fix Hornet's message for a spell or ability from a pickup cutscene, such as Desolate Dive, showing before the
+  cutscene and HK's screen after it, and the arena staying locked once it's closed
 - Fix bounce shrooms launching Hornet lower than the Knight when she pogos off them, short of ledges she needs
 - Fix soul totems filling Hornet's whole silk spool: soul from totems, Grubsong and Dream Nail hits turns into silk at
   the rate of a nail hit
