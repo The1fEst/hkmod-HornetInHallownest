@@ -148,7 +148,7 @@ public sealed class HornetSpawner : ModuleBase {
         HornetRoot = hornetInstance;
         hornet = heroController;
 
-        PlayerDataSyncModule.SyncHKToSS();
+        PlayerDataSyncModule.SyncHkToSs();
 
         ProgressionModule.Apply();
 
