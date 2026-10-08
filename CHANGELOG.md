@@ -62,6 +62,7 @@
 - Fix Hornet's sprint bonking off the City of Tears lifts, and her stopping at other walls only the Knight could pass
 - Announce Swift Step, Cling Grip, Clawline and Silk Soar with Silksong's full-screen message when Hornet earns them
   from the Mothwing Cloak, Mantis Claw, Crystal Heart and King's Brand, in place of HK's screen
+- Fix bounce shrooms launching Hornet lower than the Knight when she pogos off them, short of ledges she needs
 - Fix soul totems filling Hornet's whole silk spool: soul from totems, Grubsong and Dream Nail hits turns into silk at
   the rate of a nail hit
 - Make Sylphsong restore Hornet's silk while she rests at a bench, at the pace of Silksong's benches
