@@ -50,6 +50,7 @@
 - Announce the tools, crests and Memory Lockets Hornet earns with Silksong's own item and crest messages
 - Leave out HK's charm message when Hornet picks up a charm, so it doesn't overlap the message for her reward
 - Announce Sylphsong with Silksong's full-screen skill message when Hornet earns it
+- Make Needolin enter a dream only once it has spent its first silk, like charging the Dream Nail, instead of right away
 - Fix a down attack carried through a room transition staying armed and pogoing off the first thing Hornet touches
 - Fix Hornet's inventory still showing the Memory Lockets of a save loaded earlier in the session
 - Make Hornet's Compass show her on the map and her Magnetite Brooch pull in geo, in place of the Knight's Wayward
