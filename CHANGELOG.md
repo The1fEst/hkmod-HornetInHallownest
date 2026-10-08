@@ -40,6 +40,8 @@
 - Fix Hornet's tool icons piling up in one slot after switching to a crest with more tools equipped
 - Make the Architect Crest's quick craft (up + bind) refill Hornet's tools for free, like the bench, since Hallownest has
   no shell shards to pay with
+- Hornet earns her tools, crests, silk skills, crest slots and Eva's upgrades through Hallownest's charms, bosses and
+  spells instead of having them all from the start
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings

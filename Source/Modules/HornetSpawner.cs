@@ -9,7 +9,6 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
-using ToolItemManager = Silksong::ToolItemManager;
 // A bare `SceneManager` binds to HK's Assembly-CSharp SceneManager (global namespace wins over the using); alias Unity's.
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
 
@@ -151,10 +150,7 @@ public sealed class HornetSpawner : ModuleBase {
 
         PlayerDataSyncModule.SyncHKToSS();
 
-        // Tools and crests are granted up front; only silk skills are playthrough-gated (via PlayerDataSyncModule).
-        ToolItemManagerBootstrap.UnlockAllToolsSilently();
-        ToolItemManager.UnlockAllCrests();
-        ToolItemManagerBootstrap.UnlockAllCrestSlots();
+        ProgressionModule.Apply();
 
         using (SilksongContext.Enter()) {
             hornetInstance.SetActive(true);

@@ -70,6 +70,7 @@ public sealed class HornetSaveBridge : ModuleBase {
                 var hk = PlayerData.instance;
                 if (spd.maxHealthBase > hk.maxHealthBase) hk.AddToMaxHealth(spd.maxHealthBase - hk.maxHealthBase);
                 PlayerDataSyncModule.SyncHKToSS();
+                ProgressionModule.Apply();
                 HudRefresh.ResetHealthHud();
                 HudRefresh.RefreshMaxSilkHud();
                 // The restore bypasses SetEquippedTools, so refresh them manually.
