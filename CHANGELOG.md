@@ -42,6 +42,7 @@
   no shell shards to pay with
 - Hornet earns her tools, crests, silk skills, crest slots and Eva's upgrades through Hallownest's charms, bosses and
   spells instead of having them all from the start
+- Hornet gets the Drifter's Cloak together with double jump (Monarch Wings) instead of from the start
 - Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
 - Fix repeated white flashes when holding Needolin while it can't be played
 - Fix Magnetite Dice block sound ignoring the volume settings

@@ -16,7 +16,7 @@ public sealed class PlayerDataSyncModule : ModuleBase {
     private static readonly Dictionary<string, Action<SPlayerData, bool>> bools = new() {
         ["hasDash"] = (ss, v) => ss.hasDash = v,
         ["hasWalljump"] = (ss, v) => ss.hasWalljump = v,
-        ["hasDoubleJump"] = (ss, v) => ss.hasDoubleJump = v,
+        ["hasDoubleJump"] = (ss, v) => ss.hasDoubleJump = ss.hasBrolly = v, // Faydown Cloak + Drifter's Cloak
         ["hasSuperDash"] = (ss, v) => ss.hasHarpoonDash = v, // Harpoon Dash
         ["hasDreamNail"] = (ss, v) => ss.hasNeedolin = v, // Needolin
         ["hasKingsBrand"] = (ss, v) => ss.hasSuperJump = v, // Silk Soar
@@ -89,7 +89,6 @@ public sealed class PlayerDataSyncModule : ModuleBase {
         var ss = SPlayerData.instance;
         foreach (var kv in bools) kv.Value(ss, hk.GetBool(kv.Key));
         foreach (var kv in ints) kv.Value(ss, hk.GetInt(kv.Key));
-        ss.hasBrolly = true; // no HK equivalent
     }
 
     // HK's 3 nail arts + Shade Cloak fill Hornet's leftover unlocks: 1st art -> charge attack; the rest (2nd art, 3rd
