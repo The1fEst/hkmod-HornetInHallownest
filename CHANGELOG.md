@@ -50,6 +50,7 @@
 - Announce the tools, crests and Memory Lockets Hornet earns with Silksong's own item and crest messages
 - Leave out HK's charm message when Hornet picks up a charm, so it doesn't overlap the message for her reward
 - Announce Sylphsong with Silksong's full-screen skill message when Hornet earns it
+- Fix the Hunter Crest's evolution message showing a raw text key as its title
 - Make Sylphsong restore Hornet's silk while she rests at a bench, at the pace of Silksong's benches
 - Make Needolin enter a dream only once it has spent its first silk, like charging the Dream Nail, instead of right away
 - Give Hornet plain Needolin from the start; the Dream Nail unlocks Elegy of the Deep (Needolin holding down), which
