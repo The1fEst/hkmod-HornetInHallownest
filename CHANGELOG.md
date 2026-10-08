@@ -60,6 +60,8 @@
 - Show only HK's screens for the Knight's pickups, and leave out HK's screen when Hornet's own message announces the
   same reward
 - Fix Hornet's sprint bonking off the City of Tears lifts, and her stopping at other walls only the Knight could pass
+- Announce Swift Step, Cling Grip, Clawline and Silk Soar with Silksong's full-screen message when Hornet earns them
+  from the Mothwing Cloak, Mantis Claw, Crystal Heart and King's Brand, in place of HK's screen
 - Fix soul totems filling Hornet's whole silk spool: soul from totems, Grubsong and Dream Nail hits turns into silk at
   the rate of a nail hit
 - Make Sylphsong restore Hornet's silk while she rests at a bench, at the pace of Silksong's benches
