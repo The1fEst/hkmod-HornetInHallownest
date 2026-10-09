@@ -119,6 +119,7 @@
 - Fix Hornet crouching in front of Elderbug instead of holding out the Delicate Flower to him, and for the Collector's
   Map lying at her height
 - Fix Hornet looking up and away from the King at the end of the Path of Pain: she now stands facing him
+- Fix Hornet snapping up from a kneel after dropping out of the Distant Village web trap: she now lands hard and rises
 
 Huge shoutout to @The1fEst who contributed these changes.
 
