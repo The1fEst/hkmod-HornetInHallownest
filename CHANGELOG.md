@@ -116,6 +116,7 @@
 - Fix Hornet dropping flat and getting up from the floor in the Shade Soul cutscene: she now kneels, floats while
   taking the spell and lands
 - Show Hornet instead of the Knight absorbing the Abyss Shriek, once her Thread Storm that called it finishes
+- Fix Hornet crouching in front of Elderbug instead of holding out the Delicate Flower to him
 
 Huge shoutout to @The1fEst who contributed these changes.
 
