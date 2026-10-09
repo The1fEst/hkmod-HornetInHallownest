@@ -146,6 +146,7 @@ public class HornetInHallownest() : Mod("HornetInHallownest"), ITogglableMod, IL
         moduleHost.Add(new BeastlingCallModule());
         moduleHost.Add(new CrystalHeartModule());
         moduleHost.Add(new KnightStandInModule());
+        moduleHost.Add(new ControlReminderModule());
         moduleHost.Add(new BenchModule());
         moduleHost.Add(new SceneTransitionModule());
         moduleHost.Add(new HornetSaveBridge());

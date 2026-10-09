@@ -120,6 +120,8 @@
   Map lying at her height
 - Fix Hornet looking up and away from the King at the end of the Path of Pain: she now stands facing him
 - Fix Hornet snapping up from a kneel after dropping out of the Distant Village web trap: she now lands hard and rises
+- Show Silksong's action names and Hornet's buttons in HK's control reminders, such as her silk skill button after
+  Vengeful Spirit and up + Clawline for the Crystal Heart
 
 Huge shoutout to @The1fEst who contributed these changes.
 
