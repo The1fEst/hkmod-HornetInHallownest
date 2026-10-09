@@ -96,6 +96,8 @@
 - Fix button prompts in Hornet's UI showing "None" or nothing instead of the bound key/button
 - Fix the button that closes the pause menu also triggering Hornet's bind
 - Give Hornet the Crystal Heart: hold up + Clawline on the ground or a wall to charge, release to fly
+- Fix the Dream Nail cutscene lifting a Knight sprite instead of Hornet, leaving her half-turned during the dreamers'
+  dialogue and invisible in the dream
 
 Huge shoutout to @The1fEst who contributed these changes.
 
