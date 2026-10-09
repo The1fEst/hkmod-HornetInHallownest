@@ -122,6 +122,7 @@
 - Fix Hornet snapping up from a kneel after dropping out of the Distant Village web trap: she now lands hard and rises
 - Show Silksong's action names and Hornet's buttons in HK's control reminders, such as her silk skill button after
   Vengeful Spirit and up + Clawline for the Crystal Heart
+- Fix Hornet's item messages drawing over HK's relic and journal messages: they now stack above them
 
 Huge shoutout to @The1fEst who contributed these changes.
 
