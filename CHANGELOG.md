@@ -102,6 +102,11 @@
   dreamer visions shows again
 - Show Hornet instead of a Knight sprite when taking a spell, the Dream Nail or Monarch Wings, and in the dreamers'
   visions
+- Announce the Faydown Cloak, Elegy of the Deep and Beastling Call with Silksong's own screen in place of HK's when
+  Hornet gets Monarch Wings, the Dream Nail or Dreamgate
+- Show Silksong's first-tool tutorial in place of HK's first-charm tutorial, and leave out HK's charm reminder at
+  benches for Hornet
+- Fix the silk skill message never closing when Hornet's crest has nothing equipped yet, such as on a new save
 
 Huge shoutout to @The1fEst who contributed these changes.
 
