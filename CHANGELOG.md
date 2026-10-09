@@ -95,6 +95,7 @@
 - Fix the controller's X/Y menu buttons (e.g. changing crest) doing nothing in Hornet's inventory
 - Fix button prompts in Hornet's UI showing "None" or nothing instead of the bound key/button
 - Fix the button that closes the pause menu also triggering Hornet's bind
+- Give Hornet the Crystal Heart: hold up + Clawline on the ground or a wall to charge, release to fly
 
 Huge shoutout to @The1fEst who contributed these changes.
 
