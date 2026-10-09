@@ -109,6 +109,8 @@
 - Fix the silk skill message never closing when Hornet's crest has nothing equipped yet, such as on a new save
 - Fix Hornet's masks and silk spool staying hidden after the message for Swift Step, Cling Grip, Clawline, Silk Soar
   or Sylphsong
+- Fix Hornet playing her pickup animation again after the message for a big item, such as the Mantis Claw, and getting
+  up twice after the Crystal Heart's
 
 Huge shoutout to @The1fEst who contributed these changes.
 
