@@ -142,6 +142,7 @@
   give silk
 - Fix breakable floors giving way under Hornet, and her next down-dash breaking none, after a down-dash cut short by
   an attack or a hit
+- Fix the Kingsoul staying equipped for good after saving in the Abyss room where Hornet opens the Birthplace floor
 
 Huge shoutout to @The1fEst who contributed these changes.
 
