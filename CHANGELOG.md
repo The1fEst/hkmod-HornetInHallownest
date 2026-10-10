@@ -145,6 +145,8 @@
 - Fix the Kingsoul staying equipped for good after saving in the Abyss room where Hornet opens the Birthplace floor
 - Fix the pause menu opening while Hornet dies, which let the game quit to the menu in the middle of her death
 - Fix the Knight showing in Hornet's place when quitting to the menu, and staying in her place if the save failed
+- Give Hornet her whole kit in Godseeker mode: Silk Soar, every crest, tool and Silkshot, all Memory Lockets and
+  Sylphsong
 
 Huge shoutout to @The1fEst who contributed these changes.
 
