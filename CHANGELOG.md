@@ -161,6 +161,7 @@
   Knight's 15
 - Fix thorns that only reach above the Knight's height hurting Hornet, such as on the way to the Lifeblood Core
 - Refill the tool uses Shell Satchel adds when Hornet equips it on a bench, without sitting down again
+- Give Hornet back the masks, silk and tools she spent in a dream boss's or Grey Prince Zote's dream
 
 Huge shoutout to @The1fEst who contributed these changes.
 
