@@ -162,6 +162,7 @@
 - Fix thorns that only reach above the Knight's height hurting Hornet, such as on the way to the Lifeblood Core
 - Refill the tool uses Shell Satchel adds when Hornet equips it on a bench, without sitting down again
 - Give Hornet back the masks, silk and tools she spent in a dream boss's or Grey Prince Zote's dream
+- Make dreams work like Silksong's memories: Hornet enters at full health, and her cogflies don't follow her in or out
 
 Huge shoutout to @The1fEst who contributed these changes.
 
