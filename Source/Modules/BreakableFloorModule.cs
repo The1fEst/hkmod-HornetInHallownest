@@ -21,7 +21,6 @@ public sealed class BreakableFloorModule : ModuleBase {
 
     public override void Initialize() {
         Detour(typeof(SHeroController), "HeroDashPressed", OnDashPressed);
-        Detour(typeof(SHeroController), "FinishedDashing", OnFinishedDashing, typeof(bool));
         Detour(typeof(SHeroController), "GetState", OnGetState, typeof(string));
     }
 
@@ -37,6 +36,11 @@ public sealed class BreakableFloorModule : ModuleBase {
     // Per-frame while quaking: break the transient floors Hornet's body overlaps (small cached list, no FindObjects).
     public override void HornetActiveUpdate(SHeroController hero) {
         if (!quaking) return;
+        if (!hero.dashingDown) {
+            EndQuake();
+            return;
+        }
+
         // TODO: perf
         var body = hero.GetComponent<BoxCollider2D>();
         if (!body) return;
@@ -50,11 +54,6 @@ public sealed class BreakableFloorModule : ModuleBase {
         orig(self);
         if (!quaking && HeroSwitch.HornetActive && self.dashingDown && PlayerData.instance.quakeLevel > 0)
             StartQuake();
-    }
-
-    private void OnFinishedDashing(Action<SHeroController, bool> orig, SHeroController self, bool wasDown) {
-        orig(self, wasDown);
-        if (quaking) EndQuake();
     }
 
     // Some floors (Crystal Peak Loose Floors via the "Detect Quake" FSM) check HeroController.GetState("spellQuake")
