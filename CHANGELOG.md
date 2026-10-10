@@ -123,6 +123,8 @@
 - Show Silksong's action names and Hornet's buttons in HK's control reminders, such as her silk skill button after
   Vengeful Spirit and up + Clawline for the Crystal Heart
 - Fix Hornet's item messages drawing over HK's relic and journal messages: they now stack above them
+- Show down beside the Needolin button in HK's Dream Nail reminder, such as at Whispering Roots, since Hornet's Dream
+  Nail is Elegy of the Deep
 - Fix the lantern's light and Hornet's map icon staying behind for a moment after she enters a room
 - Fix the camera sometimes no longer following Hornet once she enters a room
 - Fix the Crystal Heart and Clawline no longer working after a room change interrupted a Crystal Heart flight
