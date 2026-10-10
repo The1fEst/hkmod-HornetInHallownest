@@ -133,6 +133,7 @@
 - Fix the Crystal Heart's charge glow staying under Hornet after she flies with it
 - Fix geo rocks, levers and breakable walls ignoring Hornet's slashes once her Crystal Heart has hit them
 - Fix spikes not hurting Hornet in rooms whose spikes are one object spread over several areas, such as Crystal Peak's
+- Fix a save made with the mod turned off getting Hornet's data from the save played before it
 
 Huge shoutout to @The1fEst who contributed these changes.
 
