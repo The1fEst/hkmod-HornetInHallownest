@@ -125,6 +125,7 @@
 - Fix Hornet's item messages drawing over HK's relic and journal messages: they now stack above them
 - Fix the lantern's light and Hornet's map icon staying behind for a moment after she enters a room
 - Fix the camera sometimes no longer following Hornet once she enters a room
+- Fix the Crystal Heart and Clawline no longer working after a room change interrupted a Crystal Heart flight
 - Fix Hornet being flung sideways after a short jump out of acid
 - Fix Hornet flashing white forever after absorbing a dream warrior
 - Fix the Crystal Heart's charge glow staying under Hornet after she flies with it
