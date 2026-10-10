@@ -123,6 +123,7 @@
 - Show Silksong's action names and Hornet's buttons in HK's control reminders, such as her silk skill button after
   Vengeful Spirit and up + Clawline for the Crystal Heart
 - Fix Hornet's item messages drawing over HK's relic and journal messages: they now stack above them
+- Fix the lantern's light and Hornet's map icon staying behind for a moment after she enters a room
 - Fix Hornet being flung sideways after a short jump out of acid
 - Fix Hornet flashing white forever after absorbing a dream warrior
 - Fix the Crystal Heart's charge glow staying under Hornet after she flies with it
