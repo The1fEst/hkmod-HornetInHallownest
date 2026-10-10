@@ -144,6 +144,7 @@
   an attack or a hit
 - Fix the Kingsoul staying equipped for good after saving in the Abyss room where Hornet opens the Birthplace floor
 - Fix the pause menu opening while Hornet dies, which let the game quit to the menu in the middle of her death
+- Fix the Knight showing in Hornet's place when quitting to the menu, and staying in her place if the save failed
 
 Huge shoutout to @The1fEst who contributed these changes.
 
