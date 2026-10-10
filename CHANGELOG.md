@@ -123,6 +123,8 @@
 - Show Silksong's action names and Hornet's buttons in HK's control reminders, such as her silk skill button after
   Vengeful Spirit and up + Clawline for the Crystal Heart
 - Fix Hornet's item messages drawing over HK's relic and journal messages: they now stack above them
+- Fix a completed mask leaving Hornet's lost masks shown empty and the new mask missing from her HUD: like in
+  Silksong, her masks now refill one by one and the new one appears full
 - Show down beside the Needolin button in HK's Dream Nail reminder, such as at Whispering Roots, since Hornet's Dream
   Nail is Elegy of the Deep
 - Fix the lantern's light and Hornet's map icon staying behind for a moment after she enters a room
