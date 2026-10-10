@@ -160,6 +160,7 @@
 - Let Hornet open the Abyss door to the Lifeblood Core in her lifeblood state, since her blue masks never reach the
   Knight's 15
 - Fix thorns that only reach above the Knight's height hurting Hornet, such as on the way to the Lifeblood Core
+- Refill the tool uses Shell Satchel adds when Hornet equips it on a bench, without sitting down again
 
 Huge shoutout to @The1fEst who contributed these changes.
 
