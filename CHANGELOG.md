@@ -149,6 +149,7 @@
   Sylphsong
 - Drain Hornet's silk in the Hall of Gods and pantheons where the Knight loses his soul, and refill her tools when she
   leaves a pantheon
+- Make Hornet's tool and nail statuses, such as the Pollip Pouch's poison and Flintslate's fire, work on HK enemies
 
 Huge shoutout to @The1fEst who contributed these changes.
 
