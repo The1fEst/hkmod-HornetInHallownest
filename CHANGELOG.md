@@ -147,6 +147,8 @@
 - Fix the Knight showing in Hornet's place when quitting to the menu, and staying in her place if the save failed
 - Give Hornet her whole kit in Godseeker mode: Silk Soar, every crest, tool and Silkshot, all Memory Lockets and
   Sylphsong
+- Drain Hornet's silk in the Hall of Gods and pantheons where the Knight loses his soul, and refill her tools when she
+  leaves a pantheon
 
 Huge shoutout to @The1fEst who contributed these changes.
 
