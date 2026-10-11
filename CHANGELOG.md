@@ -171,6 +171,7 @@
 - Fix Hornet's pogo passing through the rising Garpedes in Deepnest instead of bouncing off them
 - Give Hornet the Grimmchild as a blue tool: worn, it follows her, collects the Troupe's flames and grows with the
   ritual
+- Fix the screen staying black after Hornet defeats the Nightmare King and wakes up in Dirtmouth
 
 Huge shoutout to @The1fEst who contributed these changes.
 
