@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using SFsm = SilksongPM::HutongGames.PlayMaker.Fsm;
 using SFsmState = SilksongPM::HutongGames.PlayMaker.FsmState;
+using SNonSlider = Silksong::NonSlider;
 
 namespace HornetInHallownest.Modules;
 
@@ -20,6 +21,12 @@ public sealed class SceneFixesModule : ModuleBase {
         // TODO: just hook into thread storm
         Detour(typeof(SFsm), "SwitchState",
             (Action<Action<SFsm, SFsmState?>, SFsm, SFsmState?>)OnSilksongSwitchState, typeof(SFsmState));
+        Detour(typeof(SNonSlider), nameof(SNonSlider.IsNonSlider),
+            (Func<Func<GameObject, bool>, GameObject, bool>)OnIsNonSlider, typeof(GameObject));
+        Detour(typeof(SNonSlider), nameof(SNonSlider.IsNonSlider),
+            (Func<Func<Collider2D, bool>, Collider2D, bool>)OnIsNonSlider, typeof(Collider2D));
+        Detour(typeof(SNonSlider), nameof(SNonSlider.TryGetNonSlider),
+            (TryGetNonSliderHook)OnTryGetNonSlider, typeof(GameObject), typeof(SNonSlider).MakeByRefType());
     }
 
     public override string Id => "scene-fixes";
@@ -33,7 +40,6 @@ public sealed class SceneFixesModule : ModuleBase {
         if (birthplaceForcedCharm && scene.name != "Abyss_06_Core") RestoreBirthplaceCharm();
         screamGet = scene.name == "Abyss_12" ? FindScreamGetFsm() : null;
         inShamanTemple = scene.name == "Crossroads_ShamanTemple";
-        AddSilksongNonSliders(scene);
 
         switch (scene.name) {
             case "Deepnest_Spider_Town":
@@ -63,21 +69,42 @@ public sealed class SceneFixesModule : ModuleBase {
         }
     }
 
-    // Hornet's wall cling and wall jump look walls up in Silksong's NonSlider registry, which HK's own NonSlider (dreamer
-    // and Godhome blockers, walls under roofs) never joins. Her wall rays also hit solid HERO_DETECTOR colliders (e.g.
-    // the Godhome edges' "End Superdash"), which HK's terrain-only rays never count as walls.
-    private static void AddSilksongNonSliders(Scene scene) {
-        foreach (var root in scene.GetRootGameObjects()) {
-            foreach (var nonSlider in root.GetComponentsInChildren<NonSlider>(true))
-                AddSilksongNonSlider(nonSlider.gameObject);
-            foreach (var collider in root.GetComponentsInChildren<Collider2D>(true))
-                if (collider.gameObject.layer == (int)PhysLayers.HERO_DETECTOR && !collider.isTrigger)
-                    AddSilksongNonSlider(collider.gameObject);
-        }
+    // Silksong's wall cling and collision handler ask her NonSlider registry, which HK's scene objects never join: HK's
+    // NonSlider is an empty marker class with no registry, and solid HERO_DETECTOR colliders (e.g. the Godhome edges'
+    // "End Superdash") are no-wall only to HK's terrain-only rays. Register them into the registry from its own query
+    // paths: no scene-wide sweep, and blockers enabled after scene load are covered too.
+    private static void TryRegister(GameObject go) {
+        if (!go || go.TryGetComponent<SNonSlider>(out _)) return;
+        if (!IsHkNonSlider(go)) return;
+        go.AddComponent<SNonSlider>();
+    }
 
-        static void AddSilksongNonSlider(GameObject go) {
-            if (!go.TryGetComponent<Silksong::NonSlider>(out _)) go.AddComponent<Silksong::NonSlider>();
-        }
+    // The Knight's cling checks the marker on the hit object itself (raycastHit.collider.GetComponent<NonSlider>), so
+    // match that scope.
+    private static bool IsHkNonSlider(GameObject go) {
+        if (go.GetComponent<NonSlider>()) return true;
+        if (go.layer != (int)PhysLayers.HERO_DETECTOR) return false;
+        foreach (var collider in go.GetComponents<Collider2D>())
+            if (!collider.isTrigger) return true;
+        return false;
+    }
+
+    private static bool OnIsNonSlider(Func<GameObject, bool> orig, GameObject go) {
+        TryRegister(go);
+        return orig(go);
+    }
+
+    private static bool OnIsNonSlider(Func<Collider2D, bool> orig, Collider2D? collider) {
+        if (collider) TryRegister(collider.gameObject);
+        return orig(collider!);
+    }
+
+    private delegate bool TryGetNonSliderOrig(GameObject go, out SNonSlider nonSlider);
+    private delegate bool TryGetNonSliderHook(TryGetNonSliderOrig orig, GameObject go, out SNonSlider nonSlider);
+
+    private static bool OnTryGetNonSlider(TryGetNonSliderOrig orig, GameObject go, out SNonSlider nonSlider) {
+        TryRegister(go);
+        return orig(go, out nonSlider);
     }
 
     #region Vengeful Spirit -> Silk Spear equip
