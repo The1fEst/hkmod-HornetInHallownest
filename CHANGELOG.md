@@ -2,6 +2,8 @@
 
 ## _Unreleased_
 
+## v0.4.0
+
 - Fix camera sticking to Hornet, jerking on ledges and not looking up/down
 - Fix masks and soul vessels picked up as Hornet not counting (missing silk spools)
 - Fix softlock when picking up the Crystal Heart as Hornet
@@ -51,6 +53,8 @@
 - Fix the controller's X/Y menu buttons (e.g. changing crest) doing nothing in Hornet's inventory
 - Fix button prompts in Hornet's UI showing "None" or nothing instead of the bound key/button
 - Fix the button that closes the pause menu also triggering Hornet's bind
+
+Huge shoutout to @The1fEst who contributed these changes.
 
 ## v0.3.0
 
