@@ -169,6 +169,8 @@
   kills
 - Fix Hornet's jump being cut short when a hit, such as a Cogfly's, lands on an HK enemy's armor
 - Fix Hornet's pogo passing through the rising Garpedes in Deepnest instead of bouncing off them
+- Give Hornet the Grimmchild as a blue tool: worn, it follows her, collects the Troupe's flames and grows with the
+  ritual
 
 Huge shoutout to @The1fEst who contributed these changes.
 

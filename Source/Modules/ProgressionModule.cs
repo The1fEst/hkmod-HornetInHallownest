@@ -117,6 +117,7 @@ public sealed class ProgressionModule : ModuleBase {
         ], AnyFlag: true),
         Earned("Zap Imbuement", Charm(11)), // Flukenest
         Earned("Thief Claw", new Flag("collectorDefeated")),
+        Earned(GrimmchildTool.ToolName, Charm(40)),
 
         Earned("Compass", Charm(2)), // Wayward Compass
         Earned("Rosary Magnet", Charm(1)), // Gathering Swarm
