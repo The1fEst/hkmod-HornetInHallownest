@@ -174,6 +174,8 @@
 - Give Hornet the Grimmchild as a blue tool: worn, it follows her, collects the Troupe's flames and grows with the
   ritual
 - Fix the screen staying black after Hornet defeats the Nightmare King and wakes up in Dirtmouth
+- Fix Hornet freezing mid-sprint or mid-Clawline, or getting her control back after a Crystal Heart dash, when a boss
+  arena stops her for the boss's entrance
 
 Huge shoutout to @The1fEst who contributed these changes.
 
