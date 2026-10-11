@@ -90,7 +90,7 @@
 - Fix Trial of the Fool respawn platform not appearing after a spike hit as Hornet
 - Allow opening the quick map as Hornet outside of benches
 - Allow opening the inventory map as Hornet by double-tapping quick map, like the Knight
-- Allow reaching the map from Hornet's inventory by paging past the last pane, and paging back from it
+- Show HK's inventory map in Hornet's map pane, with its area overview, zoom, markers and map key
 - Show the map pane icon in Hornet's inventory once the Knight has a map
 - Fix the controller's X/Y menu buttons (e.g. changing crest) doing nothing in Hornet's inventory
 - Fix button prompts in Hornet's UI showing "None" or nothing instead of the bound key/button
