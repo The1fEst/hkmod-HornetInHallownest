@@ -70,9 +70,11 @@
 - Fix soul totems filling Hornet's whole silk spool: soul from totems, Grubsong and Dream Nail hits turns into silk at
   the rate of a nail hit
 - Make Sylphsong restore Hornet's silk while she rests at a bench, at the pace of Silksong's benches
-- Make Needolin enter a dream only once it has spent its first silk, like charging the Dream Nail, instead of right away
+- Enter HK dreams with Elegy of the Deep like Silksong's memories: next to a dream's entrance the song costs no silk, then
+  holds Hornet playing while the camera closes in and the memory's effect plays, until she collapses into the dream
 - Give Hornet plain Needolin from the start; the Dream Nail unlocks Elegy of the Deep (Needolin holding down), which
-  acts as the Dream Nail, while any song still drains a dreamer from inside its dream
+  stands in for the Dream Nail on dream entrances and dream bosses, while any song still drains a dreamer from inside
+  its dream
 - Add Beastling Call (Needolin holding up), unlocked with the Dream Gate: it takes Hornet to the stag station the Stag
   waits at, wherever HK would let her set a Dream Gate
 - Fix a down attack carried through a room transition staying armed and pogoing off the first thing Hornet touches
