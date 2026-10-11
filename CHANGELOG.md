@@ -168,6 +168,7 @@
 - Give Hornet her Hunter's Journal with the Knight's, announced like Silksong's, and fill it with HK's entries and his
   kills
 - Fix Hornet's jump being cut short when a hit, such as a Cogfly's, lands on an HK enemy's armor
+- Fix Hornet's pogo passing through the rising Garpedes in Deepnest instead of bouncing off them
 
 Huge shoutout to @The1fEst who contributed these changes.
 
