@@ -165,6 +165,8 @@
 - Make dreams work like Silksong's memories: Hornet enters at full health, and her cogflies don't follow her in or out
 - List the Knight's keys, Isma's Tear, Lumafly Lantern, Crystal Heart, Shade Cloak, Desolate Dive, map and quill, relics,
   Rancid Eggs, Pale Ore and Dream Nail essence among Hornet's inventory items
+- Give Hornet her Hunter's Journal with the Knight's, announced like Silksong's, and fill it with HK's entries and his
+  kills
 
 Huge shoutout to @The1fEst who contributed these changes.
 

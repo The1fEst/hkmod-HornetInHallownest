@@ -17,6 +17,7 @@ public sealed class PlayerDataSyncModule : ModuleBase {
     private static readonly Dictionary<string, Action<SPlayerData, bool>> bools = new() {
         ["hasDash"] = (ss, v) => ss.hasDash = v,
         ["hasWalljump"] = (ss, v) => ss.hasWalljump = v,
+        ["hasJournal"] = (ss, v) => ss.hasJournal = v,
         ["hasDoubleJump"] = (ss, v) => ss.hasDoubleJump = ss.hasBrolly = v, // Faydown Cloak + Drifter's Cloak
         ["hasSuperDash"] = (ss, v) => ss.hasHarpoonDash = v, // Harpoon Dash
         ["hasDreamNail"] = (ss, v) => ss.hasNeedolinMemoryPowerup = v, // Elegy of the Deep (Needolin + down)
