@@ -163,6 +163,8 @@
 - Give Hornet back the masks, silk and tools she spent in a dream boss's, Grey Prince Zote's or the Radiance's dream, a
   Hall of Gods fight or a pantheon, whether she wins or dies there
 - Make dreams work like Silksong's memories: Hornet enters at full health, and her cogflies don't follow her in or out
+- List the Knight's keys, Isma's Tear, Lumafly Lantern, Crystal Heart, Shade Cloak, Desolate Dive, map and quill, relics,
+  Rancid Eggs, Pale Ore and Dream Nail essence among Hornet's inventory items
 
 Huge shoutout to @The1fEst who contributed these changes.
 
