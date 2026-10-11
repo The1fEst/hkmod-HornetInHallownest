@@ -1,6 +1,7 @@
 extern alias Silksong;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using HornetInHallownest.Core;
 using HornetInHallownest.Util;
 using UnityEngine;
@@ -44,12 +45,23 @@ public sealed class PogoModule : ModuleBase {
         return result;
     }
 
+    private readonly List<CollisionEnterEvent> subscribedTriggers = [];
+
     // Landing on a shroom: BounceShroom's collision handler messages HeroController.instance, the inert Knight.
     private void OnShroomStart(Action<BounceShroom> orig, BounceShroom self) {
         orig(self);
         if (!self.active) return;
-        foreach (var trigger in self.GetComponentsInChildren<CollisionEnterEvent>())
+        subscribedTriggers.RemoveAll(t => !t); // died with their scene
+        foreach (var trigger in self.GetComponentsInChildren<CollisionEnterEvent>()) {
             trigger.OnCollisionEnteredDirectional += BounceOffShroom;
+            subscribedTriggers.Add(trigger);
+        }
+    }
+
+    protected override void OnDeinitialize() {
+        foreach (var trigger in subscribedTriggers)
+            if (trigger) trigger.OnCollisionEnteredDirectional -= BounceOffShroom;
+        subscribedTriggers.Clear();
     }
 
     private void BounceOffShroom(CollisionEnterEvent.Direction direction, Collision2D collision) {
