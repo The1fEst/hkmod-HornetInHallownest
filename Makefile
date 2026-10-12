@@ -3,19 +3,11 @@ LOCAL_REFS := $(CURDIR)/local-refs
 
 # Managed dirs the csproj references
 GAME_PATH  ?= $(HOME)/.local/share/Steam/steamapps/common/Hollow Knight
-HK_MANAGED ?= $(GAME_PATH)/hollow_knight_Data/Managed
 SS_MANAGED ?= $(GAME_PATH)/../Hollow Knight Silksong/Hollow Knight Silksong_Data/Managed
 
 CI_REFS := $(CURDIR)/ci-refs
 
-# Assemblies the csproj <Reference>s
-HK_REFS := Assembly-CSharp TeamCherry.TK2D TeamCherry.SharedUtils TeamCherry.NestedFadeGroup \
-           PlayMaker TeamCherry.Localization Newtonsoft.Json Mono.Cecil \
-           MonoMod.RuntimeDetour MonoMod.Utils \
-           UnityEngine UnityEngine.CoreModule UnityEngine.Physics2DModule UnityEngine.AudioModule \
-           UnityEngine.ParticleSystemModule UnityEngine.AnimationModule UnityEngine.UI \
-           UnityEngine.JSONSerializeModule UnityEngine.InputLegacyModule UnityEngine.ImageConversionModule \
-           UnityEngine.ScreenCaptureModule UnityEngine.AssetBundleModule
+# Silksong assemblies the csproj <Reference>s directly; Hollow Knight references come from the HollowKnight.GameLibs package
 SS_REFS := Unity.Addressables Unity.ResourceManager Newtonsoft.Json.UnityConverters
 
 .PHONY: local-refs ci-refs remap-monoscripts repack-resources docs help
@@ -45,7 +37,7 @@ local-refs:
 ci-refs: local-refs
 	rm -rf $(CI_REFS)
 	mkdir -p $(CI_REFS)/managed $(CI_REFS)/lib
-	refasmer --omit-non-api-members true -O $(CI_REFS)/managed $(patsubst %,"$(HK_MANAGED)/%.dll",$(HK_REFS)) $(patsubst %,"$(SS_MANAGED)/%.dll",$(SS_REFS))
+	refasmer --omit-non-api-members true -O $(CI_REFS)/managed $(patsubst %,"$(SS_MANAGED)/%.dll",$(SS_REFS))
 	refasmer --omit-non-api-members true -O $(CI_REFS)/lib $(LOCAL_REFS)/*.dll
 
 # Rebuild monoscripts bundle, rewriting m_AssemblyName -> Silksong.*

@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-    <Import Condition="Exists('LocalConfig.props')" Project="LocalConfig.props"/>
+    <Import Condition="Exists('../HollowKnightPath.props')" Project="../HollowKnightPath.props"/>
 
     <PropertyGroup>
         <TargetFramework>netstandard2.1</TargetFramework>
@@ -11,25 +11,23 @@
         <EnableNETAnalyzers>True</EnableNETAnalyzers>
         <AnalysisMode>recommended</AnalysisMode>
 
-        <!-- Game path, default steam location. Override in LocalConfig.props -->
+        <RestorePackagesWithLockFile>True</RestorePackagesWithLockFile>
+        <RestoreLockedMode Condition="'$(CI)' == 'true'">True</RestoreLockedMode>
+
+        <!-- Game path, default steam location. Override in HollowKnightPath.props -->
         <GamePath Condition="'$(GamePath)' == '' And '$(OS)' == 'Windows_NT'">C:/Program Files (x86)/Steam/steamapps/common/Hollow Knight</GamePath>
         <GamePath Condition="'$(GamePath)' == '' And $([MSBuild]::IsOSPlatform('OSX'))">$(HOME)/Library/Application Support/Steam/steamapps/common/Hollow Knight</GamePath>
         <GamePath Condition="'$(GamePath)' == ''">$(HOME)/.local/share/Steam/steamapps/common/Hollow Knight</GamePath>
         <SilksongGamePath Condition="'$(SilksongGamePath)' == ''">$([MSBuild]::NormalizePath('$(GamePath)', '..', 'Hollow Knight Silksong'))</SilksongGamePath>
 
         <!-- Managed directories -->
-        <HollowKnightManaged Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(GamePath)/hollow_knight.app/Contents/Resources/Data/Managed</HollowKnightManaged>
-        <HollowKnightManaged Condition="'$(HollowKnightManaged)' == ''">$(GamePath)/hollow_knight_Data/Managed</HollowKnightManaged>
         <SilksongManaged Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(SilksongGamePath)/Hollow Knight Silksong.app/Contents/Resources/Data/Managed</SilksongManaged>
         <SilksongManaged Condition="'$(SilksongManaged)' == ''">$(SilksongGamePath)/Hollow Knight Silksong_Data/Managed</SilksongManaged>
-
-        <CopyDir Condition="'$(CopyDir)' == ''">$(HollowKnightManaged)/Mods/HornetInHallownest</CopyDir>
 
         <!-- Assembly references: Use full local-refs when present, otherwise fall back to committed stubs for CI -->
         <CiRefs>$(MSBuildProjectDirectory)/../ci-refs</CiRefs>
         <LocalRefs>$(MSBuildProjectDirectory)/../local-refs</LocalRefs>
         <AssetsDir>$(MSBuildProjectDirectory)/../Assets</AssetsDir>
-        <HollowKnightManaged Condition="!Exists('$(HollowKnightManaged)')">$(CiRefs)/managed</HollowKnightManaged>
         <SilksongManaged Condition="!Exists('$(SilksongManaged)')">$(CiRefs)/managed</SilksongManaged>
         <RefsDir Condition="Exists('$(LocalRefs)/Silksong.Assembly-CSharp.dll')">$(LocalRefs)</RefsDir>
         <RefsDir Condition="'$(RefsDir)' == ''">$(CiRefs)/lib</RefsDir>
@@ -59,64 +57,29 @@
 
 
     <ItemGroup>
-    	<!-- HK / Modding API -->
-        <Reference Include="Assembly-CSharp" Private="false">
-            <HintPath>$(HollowKnightManaged)/Assembly-CSharp.dll</HintPath>
-        </Reference>
-        <Reference Include="Mono.Cecil" Private="false">
-            <HintPath>$(HollowKnightManaged)/Mono.Cecil.dll</HintPath>
-        </Reference>
-        <Reference Include="MonoMod.RuntimeDetour" Private="false">
-            <HintPath>$(HollowKnightManaged)/MonoMod.RuntimeDetour.dll</HintPath>
-        </Reference>
-        <Reference Include="MonoMod.Utils" Private="false">
-            <HintPath>$(HollowKnightManaged)/MonoMod.Utils.dll</HintPath>
-        </Reference>
-        <Reference Include="Newtonsoft.Json" Private="false">
-            <HintPath>$(HollowKnightManaged)/Newtonsoft.Json.dll</HintPath>
-        </Reference>
-        <Reference Include="PlayMaker" Private="false">
-            <HintPath>$(HollowKnightManaged)/PlayMaker.dll</HintPath>
-        </Reference>
-        <Reference Include="TeamCherry.Localization" Private="false">
-            <HintPath>$(HollowKnightManaged)/TeamCherry.Localization.dll</HintPath>
-        </Reference>
-        <Reference Include="TeamCherry.NestedFadeGroup" Private="false">
-            <HintPath>$(HollowKnightManaged)/TeamCherry.NestedFadeGroup.dll</HintPath>
-        </Reference>
-        <Reference Include="TeamCherry.SharedUtils" Private="false">
-            <HintPath>$(HollowKnightManaged)/TeamCherry.SharedUtils.dll</HintPath>
-        </Reference>
-        <Reference Include="TeamCherry.TK2D" Private="false">
-            <HintPath>$(HollowKnightManaged)/TeamCherry.TK2D.dll</HintPath>
-        </Reference>
+        <!-- Hollow Knight publicized game assemblies by default; the local game install when HollowKnightPath.props sets ManagedDir -->
+        <PackageReference
+                Include="HollowKnight.GameLibs"
+                Version="[1.0.1-hollowknight.1.5.12620.api78]"
+                PrivateAssets="all"
+                ExcludeAssets="$(ExcludeAssetsIfLocalReference)"
+        />
+    </ItemGroup>
 
-        <!-- Unity Modules -->
-        <Reference Include="UnityEngine" Private="false">
-            <HintPath>$(HollowKnightManaged)/UnityEngine.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AnimationModule" Private="false">
-            <HintPath>$(HollowKnightManaged)/UnityEngine.AnimationModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AssetBundleModule" Private="false">
-            <HintPath>$(HollowKnightManaged)/UnityEngine.AssetBundleModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AudioModule" Private="false">
-            <HintPath>$(HollowKnightManaged)/UnityEngine.AudioModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.CoreModule" Private="false">
-            <HintPath>$(HollowKnightManaged)/UnityEngine.CoreModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.InputLegacyModule" Private="false">
-            <HintPath>$(HollowKnightManaged)/UnityEngine.InputLegacyModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.Physics2DModule" Private="false">
-            <HintPath>$(HollowKnightManaged)/UnityEngine.Physics2DModule.dll</HintPath>
-        </Reference>
-        <Reference Include="System.ValueTuple" Private="false">
-            <HintPath>$(HollowKnightManaged)/System.ValueTuple.dll</HintPath>
-        </Reference>
+    <PropertyGroup Condition="Exists('$(ManagedDir)')">
+        <ExcludeAssetsIfLocalReference>compile</ExcludeAssetsIfLocalReference>
+    </PropertyGroup>
+    <Target Name="ValidateManagedDir" BeforeTargets="BeforeBuild">
+        <Error Condition="'$(ManagedDir)' != '' And !Exists('$(ManagedDir)')" Text="ManagedDir '$(ManagedDir)' does not exist."/>
+    </Target>
+    <ItemGroup Condition="Exists('$(ManagedDir)')">
+        <LocalReferences Include="Assembly-CSharp;PlayMaker;Mono.Cecil;MonoMod.RuntimeDetour;MonoMod.Utils;Newtonsoft.Json"/>
+        <LocalReferences Include="TeamCherry.Localization;TeamCherry.NestedFadeGroup;TeamCherry.SharedUtils;TeamCherry.TK2D;System.ValueTuple"/>
+        <LocalReferences Include="UnityEngine;UnityEngine.AnimationModule;UnityEngine.AssetBundleModule;UnityEngine.AudioModule;UnityEngine.CoreModule;UnityEngine.InputLegacyModule;UnityEngine.Physics2DModule"/>
+        <Reference Include="@(LocalReferences->'$(ManagedDir)/%(Identity).dll')" Private="false"/>
+    </ItemGroup>
 
+    <ItemGroup>
         <!-- Referenced directly from the silksong Managed dir, so that dotnet build works without relying on mod setup -->
         <Reference Include="Newtonsoft.Json.UnityConverters" Private="false">
             <HintPath>$(SilksongManaged)/Newtonsoft.Json.UnityConverters.dll</HintPath>
@@ -140,7 +103,10 @@
         <Exec Command="dotnet run -c Release --project &quot;$(MSBuildProjectDirectory)/../tools/SilksongPrefixer&quot; -- Silksong &quot;$(LocalRefs)&quot; --managed &quot;$(SilksongManaged)&quot; @(PrefixInput->'&quot;$(SilksongManaged)/%(Identity).dll&quot;', ' ')"/>
     </Target>
 
-    <Target Name="CopyMod" AfterTargets="PostBuildEvent" Condition="Exists('$([System.IO.Path]::GetDirectoryName($([System.IO.Path]::GetDirectoryName($(CopyDir)))))')">
+    <Target Name="CopyMod" AfterTargets="PostBuildEvent" Condition="'$(ModsDir)' != '' And Exists('$(ModsDir)')">
+        <PropertyGroup>
+            <CopyDir>$(ModsDir)/HornetInHallownest</CopyDir>
+        </PropertyGroup>
         <Message Importance="high" Text="copying $(TargetPath) to $(CopyDir) ..."/>
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(CopyDir)" SkipUnchangedFiles="true"/>
         <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFolder="$(CopyDir)" SkipUnchangedFiles="true"/>

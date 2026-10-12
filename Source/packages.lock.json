@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "dependencies": {
+    ".NETStandard,Version=v2.1": {
+      "HollowKnight.GameLibs": {
+        "type": "Direct",
+        "requested": "[1.0.1-hollowknight.1.5.12620.api78, 1.0.1-hollowknight.1.5.12620.api78]",
+        "resolved": "1.0.1-hollowknight.1.5.12620.api78",
+        "contentHash": "W7K85Z+JmLt7xJEj0UkwZcJSDnb8TwcHmHiesLVxtA6ieozyeGolSoZ1Rp8gNhJ1WmpCH1AHLACCnjVzPEKgDw=="
+      },
+      "Microsoft.Unity.Analyzers": {
+        "type": "Direct",
+        "requested": "[1.26.0, )",
+        "resolved": "1.26.0",
+        "contentHash": "lU4QRpGxzwBGkDJs86Q18CwhiqigssQrItJFr+c1Ijra35Y/uTwV/bRiSIYcXSaWl9RsXCi6dqG4xVAXb9sCtQ=="
+      }
+    }
+  }
+}

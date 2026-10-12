@@ -1,0 +1,7 @@
+<Project>
+    <PropertyGroup>
+        <GamePath>/path/to/games/Hollow Knight</GamePath>
+        <ManagedDir>$(GamePath)/hollow_knight_Data/Managed</ManagedDir>
+        <ModsDir>$(ManagedDir)/Mods</ModsDir>
+    </PropertyGroup>
+</Project>
