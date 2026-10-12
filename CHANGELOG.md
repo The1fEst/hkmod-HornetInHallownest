@@ -186,6 +186,7 @@
   Crest's in the Lifeblood Core's room: the scene now waits until the message is dismissed
 - Fix the Witch Crest's message showing a missing-text placeholder above its name
 - Fix the rest bench in the middle of a pantheon not refilling Hornet's tools
+- Let Hornet's shade dash pass through the Pure Vessel's dagger fan, like the Knight's
 
 Huge shoutout to @The1fEst who contributed these changes.
 
