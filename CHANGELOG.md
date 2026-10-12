@@ -180,6 +180,7 @@
   short right after she gets up in a dream
 - Fix Hornet walking around invisible in the Abyss's dream, and let her get up from the bone pile in place of the
   Knight's sprite
+- Show HK's completion rate in Hornet's inventory once it's unlocked
 
 Huge shoutout to @The1fEst who contributed these changes.
 
