@@ -182,6 +182,8 @@
   Knight's sprite
 - Show HK's completion rate in Hornet's inventory once it's unlocked
 - Show the Delicate Flower in Hornet's inventory and break it when she takes damage, like the Knight's
+- Fix Hornet's inventory ignoring the arrows after a scene change cut off a reward's message, such as the Witch
+  Crest's in the Lifeblood Core's room: the scene now waits until the message is dismissed
 
 Huge shoutout to @The1fEst who contributed these changes.
 
