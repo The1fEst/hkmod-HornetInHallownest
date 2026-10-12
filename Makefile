@@ -1,21 +1,14 @@
 PIPELINE   := $(CURDIR)/tools/asset-pipeline
 LOCAL_REFS := $(CURDIR)/local-refs
 
-# Managed dirs the csproj references
-GAME_PATH  ?= $(HOME)/.local/share/Steam/steamapps/common/Hollow Knight
-SS_MANAGED ?= $(GAME_PATH)/../Hollow Knight Silksong/Hollow Knight Silksong_Data/Managed
-
 CI_REFS := $(CURDIR)/ci-refs
-
-# Silksong assemblies the csproj <Reference>s directly; Hollow Knight references come from the HollowKnight.GameLibs package
-SS_REFS := Unity.Addressables Unity.ResourceManager Newtonsoft.Json.UnityConverters
 
 .PHONY: local-refs ci-refs remap-monoscripts repack-resources docs help
 
 help:
 	@echo "HornetInHallownest asset pipeline:"
 	@echo "  make local-refs        prefix dlls with Silksong into local-refs/Silksong.*.dll"
-	@echo "  make ci-refs           Stub local-refs + game dlls into ci-refs"
+	@echo "  make ci-refs           Stub local-refs into ci-refs"
 	@echo "  make remap-monoscripts rebuild monoscripts.silksong.bundle (m_AssemblyName -> Silksong.*)"
 	@echo "  make repack-resources  repack Silksong resources.assets -> silksong-resources.bundle"
 	@echo "  make docs              regenerate tag docs"
@@ -36,8 +29,7 @@ local-refs:
 # Stub the references into ci-refs
 ci-refs: local-refs
 	rm -rf $(CI_REFS)
-	mkdir -p $(CI_REFS)/managed $(CI_REFS)/lib
-	refasmer --omit-non-api-members true -O $(CI_REFS)/managed $(patsubst %,"$(SS_MANAGED)/%.dll",$(SS_REFS))
+	mkdir -p $(CI_REFS)/lib
 	refasmer --omit-non-api-members true -O $(CI_REFS)/lib $(LOCAL_REFS)/*.dll
 
 # Rebuild monoscripts bundle, rewriting m_AssemblyName -> Silksong.*

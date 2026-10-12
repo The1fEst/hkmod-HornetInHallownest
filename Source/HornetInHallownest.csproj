@@ -28,7 +28,7 @@
         <CiRefs>$(MSBuildProjectDirectory)/../ci-refs</CiRefs>
         <LocalRefs>$(MSBuildProjectDirectory)/../local-refs</LocalRefs>
         <AssetsDir>$(MSBuildProjectDirectory)/../Assets</AssetsDir>
-        <SilksongManaged Condition="!Exists('$(SilksongManaged)')">$(CiRefs)/managed</SilksongManaged>
+        <SilksongManaged Condition="!Exists('$(SilksongManaged)')">$(PkgSilksong_GameLibs)/ref/netstandard2.1</SilksongManaged>
         <RefsDir Condition="Exists('$(LocalRefs)/Silksong.Assembly-CSharp.dll')">$(LocalRefs)</RefsDir>
         <RefsDir Condition="'$(RefsDir)' == ''">$(CiRefs)/lib</RefsDir>
 
@@ -63,6 +63,14 @@
                 Version="[1.0.1-hollowknight.1.5.12620.api78]"
                 PrivateAssets="all"
                 ExcludeAssets="$(ExcludeAssetsIfLocalReference)"
+        />
+        <!-- File source for the silksong assemblies referenced below. ExcludeAssets=compile to prevent duplicates -->
+        <PackageReference
+                Include="Silksong.GameLibs"
+                Version="[1.2.0-silksong1.0.30000]"
+                PrivateAssets="all"
+                ExcludeAssets="compile"
+                GeneratePathProperty="true"
         />
     </ItemGroup>
 
