@@ -175,7 +175,7 @@
   ritual
 - Fix the screen staying black after Hornet defeats the Nightmare King and wakes up in Dirtmouth
 - Fix Hornet freezing mid-sprint or mid-Clawline, or getting her control back after a Crystal Heart dash, when a boss
-  arena stops her for the boss's entrance
+  arena or a cutscene, such as the Black Egg Temple's door, stops her
 - Fix the Knight's sprite showing instead of Hornet's wake-up when she arrives in some dreams, and her run being cut
   short right after she gets up in a dream
 - Fix Hornet walking around invisible in the Abyss's dream, and let her get up from the bone pile in place of the
