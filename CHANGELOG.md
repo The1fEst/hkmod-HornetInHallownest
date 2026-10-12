@@ -181,6 +181,7 @@
 - Fix Hornet walking around invisible in the Abyss's dream, and let her get up from the bone pile in place of the
   Knight's sprite
 - Show HK's completion rate in Hornet's inventory once it's unlocked
+- Show the Delicate Flower in Hornet's inventory and break it when she takes damage, like the Knight's
 
 Huge shoutout to @The1fEst who contributed these changes.
 
