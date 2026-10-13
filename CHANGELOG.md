@@ -137,6 +137,7 @@
 - Fix the Witch Crest's message showing a missing-text placeholder above its name
 - Fix the rest bench in the middle of a pantheon not refilling Hornet's tools
 - Let Hornet's shade dash pass through the Pure Vessel's dagger fan, like the Knight's
+- Let Confessor Jiji summon Hornet's cocoon to her hut for a Rancid Egg, like the Knight's shade
 
 ## v0.4.0
 
