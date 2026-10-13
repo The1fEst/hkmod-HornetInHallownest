@@ -2,44 +2,6 @@
 
 ## _Unreleased_
 
-## v0.4.0
-
-- Fix camera sticking to Hornet, jerking on ledges and not looking up/down
-- Fix masks and soul vessels picked up as Hornet not counting (missing silk spools)
-- Fix softlock when picking up the Crystal Heart as Hornet
-- Fix softlock in the City of Tears fountain cutscene with Hornet
-- Hide Hornet's HUD during cutscenes and dialogue, like the Knight's
-- Play Hornet's own wake-up animation when arriving in a dream, or kneel and stand up for Hall of Gods fights, instead of
-  her walking around invisible
-- Fix Hornet's silk spool showing empty or frozen chunks after loading a save or switching heroes
-- Fix bounce shrooms not bouncing Hornet when she lands on them
-- Fix Hornet's side and up slashes passing through bounce shrooms instead of knocking her back
-- Fix Gruz Mother never waking up and her fight not starting when hit by Hornet
-- Fix the City of Tears toll bench room staying dark when Hornet enters it from the left
-- Fix the dark room light, Gathering Swarm and the map compass staying where the Knight was instead of following Hornet
-- Fix Hornet clinging to and climbing walls the Knight can't, such as dreamer and Godhome blockers
-- Fix Knight effects frozen mid-animation, such as Monarch Wings, staying visible while playing as Hornet
-- Fix Plasmium Phial and lifeblood cocoons not granting Hornet blue health after a death or hero switch
-- Fix invisible contact damage from boss detection zones, such as Paintmaster Sheo's and Failed Champion's
-- Fix Hornet's HUD staying hidden after a Hall of Gods fight, and let her lie down and get up at the statue like the Knight
-- Fix the dreamer prompt asking Hornet to Focus instead of playing Needolin
-- Fix Hornet moving freely while a dreamer is absorbed and during the mask-break cutscene, and let her lie down and get
-  up afterwards like the Knight
-- Hornet now dies with her death animation, leaves her geo in a cocoon where she fell and breaks her silk spool until it's
-  recovered, except in dreams, the White Palace and Godhome
-- Fix Hornet's silk spool showing an empty first cell after quitting to the menu and loading again
-- Fix Hornet moving freely during the Abyss Shriek cutscene, and the cutscene leaving her in the Knight's appearance
-- Fix the Shaman Crest bind halo staying on Hornet after the bind is interrupted by damage
-- Fix nail hits on enemies not spawning the Reaper Crest's silk orbs, healing Hornet in the Beast Crest's rage or
-  filling the evolved Hunter Crest's combo
-- Fix Wanderer Crest critical hits on enemies dealing normal damage without their effect and sound
-- Fix the frame around Hornet's silk spool not changing with her crest and not showing the evolved Hunter Crest's combo
-  after her HUD was hidden
-- Fix the Beast Crest's rage not tinting the screen edges red
-- Fix the camera never shaking from Hornet's binds, attacks and other Silksong effects
-- Fix Hornet's tool icons piling up in one slot after switching to a crest with more tools equipped
-- Make the Architect Crest's quick craft (up + bind) refill Hornet's tools for free, like the bench, since Hallownest has
-  no shell shards to pay with
 - Hornet earns her tools, crests, silk skills, crest slots and Eva's upgrades through Hallownest's charms, bosses and
   spells instead of having them all from the start
 - Hornet gets the Drifter's Cloak together with double jump (Monarch Wings) instead of from the start
@@ -84,19 +46,7 @@
 - Show Hornet's own head for the map compass while playing as her, and mark her cocoon's room on the map
 - Fix the quick map not opening after Hornet's death until she sat on a bench or left the room
 - Fix Hornet's cocoon spawning inside a wall when she dies right next to it
-- Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
-- Fix repeated white flashes when holding Needolin while it can't be played
-- Fix Magnetite Dice block sound ignoring the volume settings
-- Fix Hornet's remaining sounds (e.g. Reaper crest mode) ignoring the volume settings
-- Fix black screen softlock when entering a room after a collision-ignoring object was unloaded early
-- Fix Trial of the Fool respawn platform not appearing after a spike hit as Hornet
-- Allow opening the quick map as Hornet outside of benches
-- Allow opening the inventory map as Hornet by double-tapping quick map, like the Knight
 - Show HK's inventory map in Hornet's map pane, with its area overview, zoom, markers and map key
-- Show the map pane icon in Hornet's inventory once the Knight has a map
-- Fix the controller's X/Y menu buttons (e.g. changing crest) doing nothing in Hornet's inventory
-- Fix button prompts in Hornet's UI showing "None" or nothing instead of the bound key/button
-- Fix the button that closes the pause menu also triggering Hornet's bind
 - Give Hornet the Crystal Heart: hold up + Clawline on the ground or a wall to charge, release to fly
 - Fix the Dream Nail cutscene lifting a Knight sprite instead of Hornet, leaving her half-turned during the dreamers'
   dialogue and invisible in the dream
@@ -187,6 +137,58 @@
 - Fix the Witch Crest's message showing a missing-text placeholder above its name
 - Fix the rest bench in the middle of a pantheon not refilling Hornet's tools
 - Let Hornet's shade dash pass through the Pure Vessel's dagger fan, like the Knight's
+
+## v0.4.0
+
+- Fix camera sticking to Hornet, jerking on ledges and not looking up/down
+- Fix masks and soul vessels picked up as Hornet not counting (missing silk spools)
+- Fix softlock when picking up the Crystal Heart as Hornet
+- Fix softlock in the City of Tears fountain cutscene with Hornet
+- Hide Hornet's HUD during cutscenes and dialogue, like the Knight's
+- Play Hornet's own wake-up animation when arriving in a dream, or kneel and stand up for Hall of Gods fights, instead of
+  her walking around invisible
+- Fix Hornet's silk spool showing empty or frozen chunks after loading a save or switching heroes
+- Fix bounce shrooms not bouncing Hornet when she lands on them
+- Fix Hornet's side and up slashes passing through bounce shrooms instead of knocking her back
+- Fix Gruz Mother never waking up and her fight not starting when hit by Hornet
+- Fix the City of Tears toll bench room staying dark when Hornet enters it from the left
+- Fix the dark room light, Gathering Swarm and the map compass staying where the Knight was instead of following Hornet
+- Fix Hornet clinging to and climbing walls the Knight can't, such as dreamer and Godhome blockers
+- Fix Knight effects frozen mid-animation, such as Monarch Wings, staying visible while playing as Hornet
+- Fix Plasmium Phial and lifeblood cocoons not granting Hornet blue health after a death or hero switch
+- Fix invisible contact damage from boss detection zones, such as Paintmaster Sheo's and Failed Champion's
+- Fix Hornet's HUD staying hidden after a Hall of Gods fight, and let her lie down and get up at the statue like the Knight
+- Fix the dreamer prompt asking Hornet to Focus instead of playing Needolin
+- Fix Hornet moving freely while a dreamer is absorbed and during the mask-break cutscene, and let her lie down and get
+  up afterwards like the Knight
+- Hornet now dies with her death animation, leaves her geo in a cocoon where she fell and breaks her silk spool until it's
+  recovered, except in dreams, the White Palace and Godhome
+- Fix Hornet's silk spool showing an empty first cell after quitting to the menu and loading again
+- Fix Hornet moving freely during the Abyss Shriek cutscene, and the cutscene leaving her in the Knight's appearance
+- Fix the Shaman Crest bind halo staying on Hornet after the bind is interrupted by damage
+- Fix nail hits on enemies not spawning the Reaper Crest's silk orbs, healing Hornet in the Beast Crest's rage or
+  filling the evolved Hunter Crest's combo
+- Fix Wanderer Crest critical hits on enemies dealing normal damage without their effect and sound
+- Fix the frame around Hornet's silk spool not changing with her crest and not showing the evolved Hunter Crest's combo
+  after her HUD was hidden
+- Fix the Beast Crest's rage not tinting the screen edges red
+- Fix the camera never shaking from Hornet's binds, attacks and other Silksong effects
+- Fix Hornet's tool icons piling up in one slot after switching to a crest with more tools equipped
+- Make the Architect Crest's quick craft (up + bind) refill Hornet's tools for free, like the bench, since Hallownest has
+  no shell shards to pay with
+- Fix Hornet falling through the floor when leaving a dream (dream bosses, Lurien)
+- Fix repeated white flashes when holding Needolin while it can't be played
+- Fix Magnetite Dice block sound ignoring the volume settings
+- Fix Hornet's remaining sounds (e.g. Reaper crest mode) ignoring the volume settings
+- Fix black screen softlock when entering a room after a collision-ignoring object was unloaded early
+- Fix Trial of the Fool respawn platform not appearing after a spike hit as Hornet
+- Allow opening the quick map as Hornet outside of benches
+- Allow opening the inventory map as Hornet by double-tapping quick map, like the Knight
+- Allow reaching the map from Hornet's inventory by paging past the last pane, and paging back from it
+- Show the map pane icon in Hornet's inventory once the Knight has a map
+- Fix the controller's X/Y menu buttons (e.g. changing crest) doing nothing in Hornet's inventory
+- Fix button prompts in Hornet's UI showing "None" or nothing instead of the bound key/button
+- Fix the button that closes the pause menu also triggering Hornet's bind
 
 Huge shoutout to @The1fEst who contributed these changes.
 
