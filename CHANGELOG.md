@@ -154,6 +154,7 @@
   she flies on at the height of a launch from the ground
 - Play Silksong's failed call when Hornet's Beastling Call can't reach the Stag, instead of a song that plays on with no
   answer
+- Let Hornet pick up Isma's Tear standing instead of crouching
 
 ## v0.4.0
 
