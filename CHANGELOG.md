@@ -144,6 +144,9 @@
 - Fix the controller never vibrating for Hornet's own moves, such as her sprint, dashes and landings
 - Fix the controller not vibrating through the Crystal Heart's charge and flight, and its charge streaks staying behind
   Hornet after a flight
+- Show Hornet's reward messages one after another instead of over each other, each holding her still, and her Memory
+  Locket pop-up after them
+- Hold Hornet's rewards until a conversation or cutscene she's in ends, and until she leaves a Colosseum trial
 
 ## v0.4.0
 
