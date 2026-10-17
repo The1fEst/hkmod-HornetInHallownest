@@ -147,6 +147,8 @@
 - Show Hornet's reward messages one after another instead of over each other, each holding her still, and her Memory
   Locket pop-up after them
 - Hold Hornet's rewards until a conversation or cutscene she's in ends, and until she leaves a Colosseum trial
+- Make Elegy of the Deep wake Whispering Roots and other dream-reactive objects after as long a song as a dream's
+  entrance takes, instead of at its first silk drain
 
 ## v0.4.0
 
