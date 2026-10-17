@@ -14,8 +14,8 @@
 - Announce Sylphsong with Silksong's full-screen skill message when Hornet earns it
 - Fix the Hunter Crest's evolution message showing a raw text key as its title
 - Show Hornet's Silksong UI in the language picked in HK instead of always in English
-- Give Hornet her Silk Hearts for HK's spells: the first spell, all three, and the first one upgraded, instead of for
-  nail arts and the Shade Cloak
+- Announce Needle Strike and each Silk Heart Hornet earns with Silksong's own messages: the first nail art's in place of
+  HK's nail art screen, then a Silk Heart for the second and third nail art and the Shade Cloak
 - Give Hornet only one Silkshot, from the first dreamer she defeats, like Silksong's one-of-three choice
 - Announce Eva's extra blue and yellow tool slots with Silksong's full-screen message when Hornet earns them
 - Announce the silk skills Hornet earns with Silksong's full-screen skill message, in place of HK's spell screen
