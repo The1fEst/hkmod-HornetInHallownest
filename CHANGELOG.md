@@ -47,7 +47,9 @@
 - Fix the quick map not opening after Hornet's death until she sat on a bench or left the room
 - Fix Hornet's cocoon spawning inside a wall when she dies right next to it
 - Show HK's inventory map in Hornet's map pane, with its area overview, zoom, markers and map key
-- Give Hornet the Crystal Heart: hold up + Clawline on the ground or a wall to charge, release to fly
+- Give Hornet the Crystal Heart: up + Clawline on the ground, in the air (once per jump) or on a wall launches her like
+  her Sharpdart, with its animations, after a short wind-up; jump or Clawline stops her, and a wall she flies into she
+  clings to
 - Fix the Dream Nail cutscene lifting a Knight sprite instead of Hornet, leaving her half-turned during the dreamers'
   dialogue and invisible in the dream
 - Hornet now wakes lying down after leaving a dream and gets up on input like the Knight, and the white flash of later
@@ -140,6 +142,8 @@
 - Let Confessor Jiji summon Hornet's cocoon to her hut for a Rancid Egg, like the Knight's shade
 - Fix Hornet's silk spool staying broken after she recovers her cocoon with no extra silk and then grows the spool
 - Fix the controller never vibrating for Hornet's own moves, such as her sprint, dashes and landings
+- Fix the controller not vibrating through the Crystal Heart's charge and flight, and its charge streaks staying behind
+  Hornet after a flight
 
 ## v0.4.0
 
